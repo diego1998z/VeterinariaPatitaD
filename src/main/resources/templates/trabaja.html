@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Clinica Veterinaria Patitas</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" th:href="@{/css/index.css}">
+    <link rel="icon" th:href="@{/img/portadafondo.png}">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@300;500&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+
+<body>
+  <header>
+         <div th:replace="fragments/navbar :: navbar"></div>
+    </header>
+
+<div class="container-fluid bg-info d-flex align-items-center py-5" style="min-height: 100vh;">
+    <div class="row w-100 align-items-center">
+        <div class="col-md-6 text-center">
+            <img th:src="@{/img/descarga3.webp}" alt="Mascota" class="img-fluid" style="max-height: 300px;">
+        </div>
+        <div class="col-md-6 text-center text-white">
+            <h1 class="fw-bold">TRABAJA CON NOSOTROS</h1>
+            <p class="lead">Forma parte de nuestro equipo y ayúdanos a cumplir nuestra misión</p>
+            <button class="btn btn-light text-info fw-bold rounded-pill px-4 py-2 mt-3" data-bs-toggle="modal" data-bs-target="#applicationModal">
+                POSTULATE!!!
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="applicationModal" tabindex="-1" aria-labelledby="applicationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="applicationModalLabel">Postula para Trabajar en Veterinaria PATITAS</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form th:action="@{/postular}" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="nombres" class="form-label">Nombres:</label>
+                        <input type="text" class="form-control" id="nombres" name="nombres" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="apellidos" class="form-label">Apellidos:</label>
+                        <input type="text" class="form-control" id="apellidos" name="apellidos" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Correo Electrónico:</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="telefono" class="form-label">Número de Teléfono:</label>
+                        <input type="tel" class="form-control" id="telefono" name="telefono" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nivel_academico" class="form-label">Nivel Académico:</label>
+                        <select id="nivel_academico" name="nivel_academico" class="form-select" required>
+                            <option value="">Selecciona una opción</option>
+                            <option value="secundario">Secundario</option>
+                            <option value="universitario">Universitario</option>
+                            <option value="bachiller">Bachiller</option>
+                            <option value="titulado">Titulado</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="area_trabajo" class="form-label">Área de Trabajo Deseada:</label>
+                        <select id="area_trabajo" name="area_trabajo" class="form-select" required>
+                            <option value="">Selecciona una opción</option>
+                            <option value="consultas_generales">Consultas Generales</option>
+                            <option value="vacunacion">Vacunación</option>
+                            <option value="desparasitacion">Desparasitación</option>
+                            <option value="cirugia">Cirugía</option>
+                            <option value="diagnostico_por_imagen">Diagnóstico por Imagen</option>
+                            <option value="laboratorio_clinico">Laboratorio Clínico</option>
+                            <option value="odontologia_veterinaria">Odontología Veterinaria</option>
+                            <option value="peluqueria_canina_felina">Peluquería Canina y Felina</option>
+                            <option value="administracion">Administración</option>
+                            <option value="recepcion">Recepción</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="carta_presentacion" class="form-label">Carta de Presentación:</label>
+                        <textarea id="carta_presentacion" name="carta_presentacion" rows="7" class="form-control" placeholder="Cuéntanos por qué quieres trabajar con nosotros..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="curriculum" class="form-label">Adjuntar Currículum (PDF):</label>
+                        <input type="file" id="curriculum" name="curriculum" class="form-control" accept=".pdf" required>
+                        <small class="text-muted">Solo se aceptan archivos PDF.</small>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button class="btn btn-success me-md-2" type="submit">Postular</button>
+                        <button class="btn btn-outline-secondary" type="reset">Limpiar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>&copy; 2025 Veterinaria PATITAS. Todos los derechos reservados.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script th:src="@{/js/navbar_logic.js}"></script>
+</body>
+</html>

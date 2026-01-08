@@ -1,0 +1,26 @@
+ body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
+ .main-content-box {
+            background-color: white;
+            border-radius: 1rem; /* rounded-4 de Bootstrap */
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.1); /* Sombra suave */
+        }
+.bg-patitas { background-color: #00bfae; } /* Color primario similar al teal */
+.text-patitas { color: #00bfae; }
+.btn-patitas { 
+background-color: #00bfae; 
+border-color: #00bfae;
+color: white;
+transition: background-color 0.15s ease-in-out;
+}
+.btn-patitas:hover {
+background-color: #00a092;
+border-color: #00a092;
+color: white;
+}
+.card-product:hover {
+transform: translateY(-3px);
+box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15)!important;
+transition: transform 0.2s, box-shadow 0.2s;
+}
+.stock-agotado { text-decoration: line-through; }
+

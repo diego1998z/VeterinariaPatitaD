@@ -1,0 +1,51 @@
+.sobre-nosotros-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #fff;   /* fondo blanco */
+    border-radius: 12px;      /* bordes redondeados */
+    box-shadow: 0 0 30px rgba(0,0,0,0.1); /* sombra suave */
+}
+.sobre-nosotros {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.sobre-nosotros-box {
+    padding: 30px;
+    max-width: 900px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    background-color: white;
+    border-radius: 1rem; /* rounded-4 de Bootstrap */
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+.card.team-hover {
+    transition: transform 0.5s cubic-bezier(0.4, 2, 0.6, 1), box-shadow 0.5s;
+}
+
+.card.team-hover:hover {
+    transform: scale(1.09);
+    box-shadow: 0 8px 32px rgba(0, 128, 128, 0.22);
+    z-index: 2;
+}
+
+.team-img {
+    transition: box-shadow 0.3s;
+}
+
+.card.team-hover:hover .team-img {
+    box-shadow: 0 12px 48px 0 rgba(0, 128, 128, 0.35), 0 2px 12px 0 rgba(0, 0, 0, 0.13);
+}
+
+.container-custom {
+    max-width: 1100px;
+    margin: 30px auto 40px auto;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 0 24px rgba(0, 128, 128, 0.10);
+}

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" th:href="@{/css/citas.css}">
+    <link rel="stylesheet" th:href="@{/css/index.css}">
+    <title>Simulador de Citas - Veterinaria Patitas</title>
+
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          crossorigin="anonymous">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+<header>
+    <div th:replace="fragments/navbar :: navbar"></div>
+</header>
+
+<div id="app" class="container-fluid">
+    <div class="main-content-box mx-auto p-4 p-md-5 my-5" style="max-width: 1000px;">
+
+        <header class="text-center mb-5 pb-3 border-bottom">
+            <h1 class="display-6 fw-bolder text-dark text-uppercase">Agendamiento de Citas</h1>
+            <p class="lead text-secondary mt-2">Disponibilidad de Servicios Veterinarios</p>
+        </header>
+
+        <!-- Muestra un mensaje de fallo o de exito si el controlador solicita un mensaje-->
+        <div th:if="${message}" id="notification"
+             th:classappend="|alert-${messageType}|"
+             class="alert mx-auto mb-4" role="alert">
+            <p th:text="${message}" class="mb-0 fw-bold"></p>
+        </div>
+
+        <div class="row">
+
+            <!-- Formulario -->
+            <section class="col-lg-6 mb-5">
+                <h2 class="h5 fw-bold mb-4 text-secondary">
+                    <i class="fa-solid fa-calendar-check me-2 text-patitas"></i>Solicitar una Cita
+                </h2>
+                  <!-- define donde se enviaran los datos cuando se presione el boton agendar cita -->
+                <form th:action="@{/book_appointment}" method="post"
+                      class="p-4 border rounded-3 shadow-sm">
+
+                    <!-- Cliente -->
+                    <div class="mb-3">
+                        <label for="clientName" class="form-label fw-semibold">Nombre</label>
+                        <input type="text" class="form-control" id="clientName"
+                               name="clientName" required>
+                    </div>
+
+                    <!-- verifica que el servicio este habilitado y muestra el valor por el id -->
+                    <div class="mb-3">
+                        <label for="serviceId" class="form-label fw-semibold">Servicio Requerido</label>
+                        <select id="serviceId" name="serviceId" class="form-select" required>
+                            <option value="">Seleccione un servicio</option>
+                            <option th:each="service : ${availableServices}"
+                                    th:value="${service.id}"
+                                    th:text="${service.name} + ' (' + ${service.duration} + ' - S/. ' + ${#numbers.formatDecimal(service.price, 1, 2)} + ')'">
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- muestra la lista de medicos disponibles y las validaciones, extrae estos datos -->
+                    <div class="mb-3">
+                        <label for="medicoId" class="form-label fw-semibold">Médico</label>
+                        <select id="medicoId" name="medicoId" class="form-select" required>
+                            <option value="">Seleccione un médico</option>
+
+                            <option th:each="med : ${allMedicos}"
+                                    th:value="${med.id}"
+                                    th:text="${med.nombre} + ' - ' + ${med.especialidad} + ' (' + ${#temporals.format(med.horarioInicio,'HH:mm')} + ' - ' + ${#temporals.format(med.horarioFin,'HH:mm')} + ')'"
+                                    th:attr="data-servicio-id=${med.servicio != null ? med.servicio.id : ''},
+                                             data-horario-inicio=${#temporals.format(med.horarioInicio,'HH:mm')},
+                                             data-horario-fin=${#temporals.format(med.horarioFin,'HH:mm')}">
+                            </option>
+                        </select>
+                        <div class="form-text">Elige un servicio y una hora para ver los médicos disponibles.</div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Fecha -->
+                        <div class="col-md-6 mb-3">
+                            <label for="date" class="form-label fw-semibold">Fecha</label>
+                            <input type="date" class="form-control" id="date"
+                                   name="date" th:min="${minDate}" required>
+                        </div>
+
+                        <!-- Hora -->
+                        <div class="col-md-6 mb-3">
+                            <label for="time" class="form-label fw-semibold">Hora</label>
+                            <select id="time" name="time" class="form-select" required>
+                                <option value="">Seleccione hora</option>
+                                <option value="09:00">09:00 AM</option>
+                                <option value="10:00">10:00 AM</option>
+                                <option value="11:00">11:00 AM</option>
+                                <option value="14:00">02:00 PM</option>
+                                <option value="15:00">03:00 PM</option>
+                                <option value="16:00">04:00 PM</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-100 btn btn-patitas fw-bold py-2 mt-3">
+                        <i class="fa-solid fa-calendar-plus me-2"></i> Agendar Cita
+                    </button>
+                </form>
+            </section>
+
+            <!-- Citas agendadas -->
+            <aside class="col-lg-6">
+                <h2 class="h5 fw-bold mb-4 text-secondary">
+                    <i class="fa-solid fa-calendar-alt me-2 text-warning"></i>Citas Ocupadas
+                </h2>
+<!-- muestra la lista de las citas que se encuentran agendadas -->
+                <div th:if="${#lists.isEmpty(bookedAppointments)}"
+                     class="alert alert-info text-center">
+                    No hay citas agendadas aún.
+                </div>
+
+                <div th:unless="${#lists.isEmpty(bookedAppointments)}">
+                    <ul class="list-group">
+                        <li th:each="appointment : ${bookedAppointments}"
+                            class="list-group-item d-flex justify-content-between align-items-center booked-item mb-2 shadow-sm">
+
+                            <div>
+                                <p class="fw-bold mb-0 text-dark"
+                                   th:text="${appointment.service.name}"></p>
+                                <p class="text-sm text-muted mb-0"
+                                   th:text="${appointment.clientName}"></p>
+                            </div>
+
+                            <div class="text-end">
+                                <span class="badge bg-warning text-dark p-2 fw-bold"
+                                      th:text="${#temporals.format(appointment.dateTime, 'dd-MM-yyyy')}"></span>
+                                <br>
+                                <span class="badge bg-patitas p-2 mt-1"
+                                      th:text="${#temporals.format(appointment.dateTime, 'HH:mm')}"></span>
+                            </div>
+
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+        </div>
+
+    </div>
+</div>
+
+<!-- Bootstrap -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const serviceSelect = document.getElementById('serviceId');
+    const timeSelect = document.getElementById('time');
+    const medicoSelect = document.getElementById('medicoId');
+
+    // crea una copia de las opciones de medicos
+    const originalOptions = Array.from(medicoSelect.options).map(o => ({
+        value: o.value,
+        text: o.text,
+        servicioId: o.dataset.servicioId,
+        inicio: o.dataset.horarioInicio,
+        fin: o.dataset.horarioFin
+    }));
+
+    // Convierte HH:mm en minutos
+    const toMinutes = str => {
+        if (!str) return null;
+        const [h, m] = str.split(':').map(n => parseInt(n));
+        return h * 60 + m;
+    };
+
+    // Verifica si la hora está dentro del horario del médico
+    const withinHorario = (horaSel, inicio, fin) => {
+        if (!horaSel) return true;
+        const h = toMinutes(horaSel);
+        const i = toMinutes(inicio);
+        const f = toMinutes(fin);
+        if (i === null || f === null) return true;
+        return h >= i && h <= f;
+    };
+
+    // Función principal de filtrado
+    function filterMedicos() {
+        const service = serviceSelect.value;
+        const hora = timeSelect.value;
+
+        // Reiniciar select
+        medicoSelect.innerHTML = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Seleccione un médico';
+        medicoSelect.appendChild(placeholder);
+
+        // Aplicar filtros
+        originalOptions.forEach(opt => {
+            if (!opt.value) return;
+
+            // Filtrar por servicio
+            if (service && opt.servicioId && opt.servicioId !== service) return;
+
+            // Filtrar por horario
+            if (hora && !withinHorario(hora, opt.inicio, opt.fin)) return;
+
+            const option = document.createElement('option');
+            option.value = opt.value;
+            option.textContent = opt.text;
+            medicoSelect.appendChild(option);
+        });
+    }
+
+    // muestra la lista de medicos disponibles segun los cambios
+    serviceSelect.addEventListener('change', filterMedicos);
+    timeSelect.addEventListener('change', filterMedicos);
+});
+</script>
+
+<script th:src="@{/js/navbar_logic.js}"></script>
+<script th:src="@{/js/animacion.js}"></script>
+<script th:src="@{/js/script.js}"></script>
+
+</body>
+</html>
