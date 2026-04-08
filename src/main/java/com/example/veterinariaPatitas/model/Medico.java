@@ -2,6 +2,8 @@ package com.example.veterinariaPatitas.model;
 
 import jakarta.persistence.*;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "medico")
@@ -22,6 +24,10 @@ public class Medico {
     @ManyToOne
     @JoinColumn(name = "servicio_id")
     private ServiceVet servicio;
+
+    // Horarios del médico (por día o fecha específica)
+    @OneToMany(mappedBy = "medico", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<HorarioMedico> horarios = new ArrayList<>();
 
     //  Constructor vacío (obligatorio para JPA)
     public Medico() {
@@ -82,6 +88,14 @@ public class Medico {
 
     public void setServicio(ServiceVet servicio) {
         this.servicio = servicio;
+    }
+
+    public List<HorarioMedico> getHorarios() {
+        return horarios;
+    }
+
+    public void setHorarios(List<HorarioMedico> horarios) {
+        this.horarios = horarios;
     }
 }
 

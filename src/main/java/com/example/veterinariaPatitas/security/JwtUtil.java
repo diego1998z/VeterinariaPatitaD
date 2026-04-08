@@ -1,25 +1,39 @@
 package com.example.veterinariaPatitas.security;
 
-import io.jsonwebtoken.*;//importa la libreria jwt
-import io.jsonwebtoken.security.Keys;//utilidad de claves seguras
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;//clave secreta de token
-import java.util.Date;//creacion y expiracion
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
+import java.util.Date;
 
 @Component
 public class JwtUtil {
 
-    // firma y verifica el token
-    private final Key key = Keys.hmacShaKeyFor("CambiarPorUnaClaveMuyLargaYSeguraQueTengaAlMenos256bits!".getBytes());
-    //tiempo de expiracion del token
-    private final long expirationMs = 1000 * 60 * 60 * 4; // 4 horas
+    private final Key key;
+    private final long expirationMs;
 
-    public String generateToken(String username, String role) {//genera el token con la info del usuario y marca la hora
+    public JwtUtil(@Value("${app.jwt.secret}") String jwtSecret,
+                   @Value("${app.jwt.expiration-ms:14400000}") long expirationMs) {
+        // Evita secretos debiles: HS256 requiere una llave suficientemente larga.
+        if (jwtSecret == null || jwtSecret.trim().length() < 32) {
+            throw new IllegalStateException("app.jwt.secret debe tener al menos 32 caracteres.");
+        }
+        this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        this.expirationMs = expirationMs;
+    }
+
+    // Crea un JWT firmado con usuario (subject), rol y tiempo de expiracion.
+    public String generateToken(String username, String role) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
 
-        return Jwts.builder()//inicializa el token con los datos del usuario y en cuando expira
+        return Jwts.builder()
                 .setSubject(username)
                 .claim("role", role)
                 .setIssuedAt(now)
@@ -28,7 +42,8 @@ public class JwtUtil {
                 .compact();
     }
 
-    public boolean validateToken(String token) {//valida y genera excepciones si no es valido
+    // Valida firma, formato y expiracion del token.
+    public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
@@ -37,12 +52,14 @@ public class JwtUtil {
         }
     }
 
-    public String getUsernameFromToken(String token) {//valida el usuario dentro del token
+    // Extrae el "subject" (usuario) del token validado.
+    public String getUsernameFromToken(String token) {
         Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
         return claims.getSubject();
     }
 
-    public String getRoleFromToken(String token) {//el rol dentr del token
+    // Extrae el claim "role" para decisiones de autorizacion.
+    public String getRoleFromToken(String token) {
         Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
         Object r = claims.get("role");
         return r != null ? r.toString() : "";

@@ -1,74 +1,81 @@
 package com.example.veterinariaPatitas.config;
 
-import com.example.veterinariaPatitas.security.JwtFilter;//filtro para proteger las rutas api
+import com.example.veterinariaPatitas.security.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;//proceso de autenticacion
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;//encriptador de contraseñas
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
-@EnableMethodSecurity//habilita la seguridad con anotaciones
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
 
-    // inyeccion del filtro jwt
     public SecurityConfig(JwtFilter jwtFilter) {
         this.jwtFilter = jwtFilter;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//regula la cadena de filtros de http
         http
-                .csrf(csrf -> csrf.disable())//desahibilita para rutas rest
+                // API y formularios de este proyecto no usan token CSRF en frontend.
+                .csrf(csrf -> csrf.disable())
 
-                
+                // Se mantiene sesion para login web (formLogin) y tambien JWT para /api/**.
                 .sessionManagement(sess ->
-                        sess.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) //gestion de sesiones
+                        sess.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
 
-                .authorizeHttpRequests(auth -> auth//incializa autorization de rutas
+                // Matriz principal de permisos por ruta.
+                .authorizeHttpRequests(auth -> auth
 
-                        // permite acceso publico a estas rutas 
+                        // Rutas publicas: paginas abiertas, login/registro y API publica.
                         .requestMatchers(
-                                "/", "/login", "/logout",
+                                "/", "/login", "/logout", "/register",
                                 "/css/**", "/js/**", "/img/**", "/favicon.ico",
                                 "/sobre_nosotros", "/adoptar", "/envia_mensaje",
                                 "/trabaja", "/upload", "/postular",
                                 "/simulador_citas", "/book_appointment",
-                                "/simulador_ventas", "/api/auth/login", "/api/auth/register"
+                                "/simulador_ventas",
+                                "/api/auth/login", "/api/auth/register",
+                                "/api/public/**"
                         ).permitAll()
 
-                        // rutas protegida solo para el trabajador
-                        .requestMatchers("/dashboard")
-                        .hasAuthority("TRABAJADOR") // Debe coincidir con CustomUserDetailsService
+                        // Panel administrativo solo para rol TRABAJADOR.
+                        .requestMatchers("/dashboard", "/admin/**")
+                        .hasAuthority("TRABAJADOR")
 
-                        // Rutas API protegidas con jwt
+                        // Cualquier endpoint /api/** (no publico) exige autenticacion.
                         .requestMatchers("/api/**")
                         .authenticated()
 
-                        .anyRequest().permitAll()//cualquier otra ruta es permitida
+                        .anyRequest().permitAll()
                 )
-                
-                
-                .formLogin(form -> form //formulario que define el login y valida las credenciales para el acceso por spring security
+
+                // Login web tradicional (usuario/contrasena) con redireccion por rol.
+                .formLogin(form -> form
                     .loginPage("/login")
-                    .loginProcessingUrl("/login") 
-                    .usernameParameter("usuario") 
-                    .passwordParameter("contrasena") 
-                    .defaultSuccessUrl("/dashboard", true) 
+                    .loginProcessingUrl("/login")
+                    .usernameParameter("usuario")
+                    .passwordParameter("contrasena")
+                    .successHandler((request, response, authentication) -> {
+                        boolean isTrabajador = authentication.getAuthorities().stream()
+                                .anyMatch(authority -> "TRABAJADOR".equals(authority.getAuthority()));
+                        response.sendRedirect(isTrabajador ? "/dashboard" : "/");
+                    })
+                    .failureUrl("/login?error=true")
                     .permitAll()
                 )
-                
-                // cierre de sesion valida y elimina cookies
+
+                // Cierre de sesion para interfaz web.
                 .logout(logout -> logout
                     .logoutUrl("/logout")
                     .logoutSuccessUrl("/login?logout=true")
@@ -76,19 +83,20 @@ public class SecurityConfig {
                     .permitAll()
                 );
 
-        // Añadir filtro JWT para APIs
+        // El filtro JWT se ejecuta antes del filtro de usuario/clave de Spring.
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-    
-    // define el bean para la autencicacion
+
+    // Expone AuthenticationManager para endpoints de login API (/api/auth/login).
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
             throws Exception {
         return config.getAuthenticationManager();
     }
-    //define el bean para el cifrado de contraseñas
+
+    // Encoder usado en registro, cambio de clave y comparacion en login.
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

@@ -6,28 +6,49 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 </head>
 
-<body class="container mt-5">
+<body class="bg-light">
 
-<h2 class="mb-4">Iniciar Sesión</h2>
+<main class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h2 class="mb-4">Iniciar Sesión</h2>
 
-<form th:action="@{/login}" method="post" class="w-50">
+                    <form th:action="@{/login}" method="post">
 
-    <div class="mb-3">
-        <label>Usuario</label>
-        <input type="text" name="usuario" class="form-control" required>
+                        <div class="mb-3">
+                            <label>Usuario</label>
+                            <input type="text" name="usuario" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Contraseña</label>
+                            <input type="password" name="contrasena" class="form-control" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+                    </form>
+
+                    <div class="d-flex flex-column gap-2 mt-3">
+                        <a th:href="@{/forgot-password}" class="text-decoration-none">¿Olvidaste tu contraseña?</a>
+                        <a th:href="@{/register}" class="text-decoration-none">Crear usuario</a>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <a th:href="@{/}" class="btn btn-outline-dark w-100">Volver al inicio</a>
+                    </div>
+
+                    <p th:if="${param.error}" class="text-danger mt-3 mb-0">Credenciales incorrectas.</p>
+                    <p th:if="${param.logout}" class="text-success mt-3 mb-0">Sesión cerrada correctamente.</p>
+                    <p th:if="${param.resetSuccess}" class="text-success mt-3 mb-0">Contraseña actualizada correctamente. Ya puedes iniciar sesión.</p>
+                    <p th:if="${param.registered}" class="text-success mt-3 mb-0">Usuario registrado. Ya puedes iniciar sesión.</p>
+                    <p th:if="${error}" th:text="${error}" class="text-danger mt-3 mb-0"></p>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div class="mb-3">
-        <label>Contraseña</label>
-        <input type="password" name="contrasena" class="form-control" required>
-    </div>
-
-
-    <button type="submit" class="btn btn-primary">Ingresar</button>
-</form>
-
-<p th:if="${error}" th:text="${error}" class="text-danger mt-3"></p>
-
+</main>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </html>

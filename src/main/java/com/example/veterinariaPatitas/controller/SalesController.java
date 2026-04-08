@@ -1,7 +1,13 @@
 package com.example.veterinariaPatitas.controller;
 
+import com.example.veterinariaPatitas.dto.InvoiceDownloadRequest;
 import com.example.veterinariaPatitas.model.Product;
+import com.example.veterinariaPatitas.service.InvoicePdfService;
 import com.example.veterinariaPatitas.service.SalesService;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -14,15 +20,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Controller
-@SessionAttributes({"cart", "products"}) // Mantiene carrito y productos en sesión
+@SessionAttributes({"cart", "products"}) // Mantiene carrito y catalogo durante la sesion del usuario.
 public class SalesController {
 
     private final SalesService salesService;
+    private final InvoicePdfService invoicePdfService;
     private static final Logger log = LoggerFactory.getLogger(SalesController.class);
 
     // Inyección del servicio
-    public SalesController(SalesService salesService) {
+    public SalesController(SalesService salesService, InvoicePdfService invoicePdfService) {
         this.salesService = salesService;
+        this.invoicePdfService = invoicePdfService;
     }
 
     /**
@@ -30,7 +38,9 @@ public class SalesController {
      */
     @ModelAttribute("products")
     public List<Product> initializeProducts() {
-        return salesService.getInitialProducts();
+        List<Product> products = salesService.getInitialProducts();
+        salesService.prepareProductsForDisplay(products);
+        return products;
     }
 
     /**
@@ -45,7 +55,11 @@ public class SalesController {
      * carga la pagina princiapl de ventas
      */
     @GetMapping("/simulador_ventas")
-    public String simuladorVentas(@ModelAttribute("cart") List<Product> cart, Model model) {
+    public String simuladorVentas(@ModelAttribute("products") List<Product> products,
+                                  @ModelAttribute("cart") List<Product> cart,
+                                  Model model) {
+        salesService.prepareProductsForDisplay(products);
+        salesService.prepareCartForDisplay(cart);
         // calcila los totales si no estan calculados 
         if (!model.containsAttribute("subtotal")) {
             salesService.calculateTotals(cart, model);
@@ -100,7 +114,7 @@ public class SalesController {
                                @ModelAttribute("cart") List<Product> cart,
                                SessionStatus status, Model model,
                                RedirectAttributes redirectAttributes) {
-//verifica que el carrito no este vacio, sino muestra un error y manda ese dato a la vista
+        // Evita finalizar ventas vacias.
         log.info("/finalize_sale called; cart size before finalize: {}", cart == null ? 0 : cart.size());
 
         if (cart == null || cart.isEmpty()) {
@@ -109,18 +123,15 @@ public class SalesController {
             return "redirect:/simulador_ventas";
         }
 
-        // descuenta del stock del producto y obtiene el carrito final
-        
-    List<Product> finalCart = salesService.finalizeSale(cart);
-    log.info("finalize_sale: finalCart size after finalizeSale: {}", finalCart == null ? 0 : finalCart.size());
+        salesService.prepareProductsForDisplay(products);
+        salesService.prepareCartForDisplay(cart);
+
+        // Finaliza logica de venta (stock + registro de venta) y conserva copia para boleta.
+        List<Product> finalCart = salesService.finalizeSale(cart);
+        log.info("finalize_sale: finalCart size after finalizeSale: {}", finalCart == null ? 0 : finalCart.size());
 
         // Calcular totales basados en el carrito finalizado (y pasarlos como flash attributes)
-        double subtotal = 0.0;
-        if (finalCart != null) {
-            subtotal = finalCart.stream()
-                    .mapToDouble(item -> item.getPrice() * item.getQuantity())
-                    .sum();
-        }
+        double subtotal = salesService.calculateSubtotal(finalCart);
         double tax = subtotal * 0.18; // IGV 18%
         double total = subtotal + tax;
 
@@ -128,28 +139,25 @@ public class SalesController {
         // tiene que pasar el redirect, así que los añadimos como flash attributes más abajo.
         salesService.calculateTotals(finalCart, model);
 
-    // Crear una representación segura (DTO) del carrito para pasar al template 
-    // una lista segura con los datos necesarios para pasar a la vista
-    List<java.util.Map<String, Object>> finalCartSafe = new java.util.ArrayList<>();
-    if (finalCart != null) {
-        for (Product p : finalCart) {
-            java.util.Map<String, Object> map = new java.util.HashMap<>();
-            map.put("id", p.getId());
-            map.put("name", p.getName());
-            map.put("price", p.getPrice());
-            map.put("quantity", p.getQuantity());
-            finalCartSafe.add(map);
+        // Serializa solo campos necesarios para generar PDF en frontend/backend.
+        List<java.util.Map<String, Object>> finalCartSafe = new java.util.ArrayList<>();
+        if (finalCart != null) {
+            for (Product p : finalCart) {
+                java.util.Map<String, Object> map = new java.util.HashMap<>();
+                map.put("id", p.getId());
+                map.put("name", p.getName());
+                map.put("price", salesService.getUnitPricePen(p));
+                map.put("quantity", p.getQuantity());
+                finalCartSafe.add(map);
+            }
         }
-    }
 
-    // aflash attibuter para la vista, la copia segura del carrito
-    redirectAttributes.addFlashAttribute("finalCart", finalCartSafe);
-    
-    redirectAttributes.addFlashAttribute("subtotal", subtotal);
-    redirectAttributes.addFlashAttribute("tax", tax);
-    redirectAttributes.addFlashAttribute("total", total);
-    // log para verificar
-    log.info("finalize_sale: added finalCart (safe) to flash attributes, redirecting to /simulador_ventas");
+        // Pasa datos al redirect para pintar resumen y habilitar descarga de boleta.
+        redirectAttributes.addFlashAttribute("finalCart", finalCartSafe);
+        redirectAttributes.addFlashAttribute("subtotal", subtotal);
+        redirectAttributes.addFlashAttribute("tax", tax);
+        redirectAttributes.addFlashAttribute("total", total);
+        log.info("finalize_sale: added finalCart (safe) to flash attributes, redirecting to /simulador_ventas");
 
         // Limpiar carrito en sesión completando el estado de sesión
         status.setComplete();
@@ -159,5 +167,31 @@ public class SalesController {
 
         // Redirigimos a la vista del simulador; el template procesará 'finalCart' y generará el PDF
         return "redirect:/simulador_ventas";
+    }
+
+    @PostMapping(value = "/invoice/download", produces = MediaType.APPLICATION_PDF_VALUE)
+    @ResponseBody
+    public ResponseEntity<byte[]> downloadInvoice(@RequestBody InvoiceDownloadRequest request,
+                                                  HttpSession session) {
+        // Rechaza solicitud sin detalle de items.
+        if (request == null || request.getItems() == null || request.getItems().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        String username = request.getUsername();
+        // Si frontend no envia username, usa el de la sesion autenticada.
+        Object usernameFromSession = session.getAttribute("usuarioLogeado");
+        if ((username == null || username.isBlank()) && usernameFromSession != null) {
+            username = usernameFromSession.toString();
+        }
+
+        // Genera boleta en backend (OpenPDF) y responde como archivo descargable.
+        byte[] pdfData = invoicePdfService.generateInvoicePdf(request, username);
+        String fileName = "Boleta_PatitasVet_" + System.currentTimeMillis() + ".pdf";
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .body(pdfData);
     }
 }

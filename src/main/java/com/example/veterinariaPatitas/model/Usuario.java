@@ -16,6 +16,9 @@ public class Usuario {
     @Column(nullable = false)
     private String contrasena;
 
+    @Column(unique = true)
+    private String email;
+
     @Column(nullable = false)
     private String role; // ADMIN o TRABAJADOR
 
@@ -58,5 +61,13 @@ public class Usuario {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = (email == null || email.isBlank()) ? null : email.trim().toLowerCase();
     }
 }

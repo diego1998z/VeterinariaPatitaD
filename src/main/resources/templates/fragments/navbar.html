@@ -1,4 +1,8 @@
-<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark" style="background-color:#35424a;">
+<nav th:fragment="navbar"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+     th:attr="data-authenticated=${#authorization.expression('isAuthenticated()')},
+              data-role=${#authorization.expression('hasAuthority(''TRABAJADOR'')') ? 'TRABAJADOR' : (#authorization.expression('hasAuthority(''CLIENTE'')') ? 'CLIENTE' : '')}"
+     class="navbar navbar-expand-lg navbar-dark" style="background-color:#35424a;">
     <div class="container">
 
         <!-- LOGO -->
@@ -27,11 +31,11 @@
                 <li class="nav-item"><a class="nav-link" th:href="@{/trabaja}"><i class="fa-solid fa-briefcase"></i> Trabaja con nosotros</a></li>
                 <li class="nav-item"><a class="nav-link" th:href="@{/simulador_ventas}"><i class="fa-solid fa-cart-shopping"></i> Shop</a></li>
                 <li class="nav-item"><a class="nav-link" th:href="@{/simulador_citas}"><i class="fa-solid fa-calendar"></i> Citas</a></li>
-                <li class="nav-item"><a class="nav-link" href="#contacto"><i class="fa-solid fa-phone"></i> Contacto</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/#contacto}"><i class="fa-solid fa-phone"></i> Contacto</a></li>
 
                 <!-- LOGIN (solo si NO está logueado) -->
                 <li class="nav-item" id="nav-login-link">
-                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#roleLoginModal">
+                    <a class="nav-link" th:href="@{/login}">
                         <i class="fa-solid fa-right-to-bracket"></i> Login
                     </a>
                 </li>
@@ -49,6 +53,31 @@
                         <li>
                             <a class="dropdown-item" th:href="@{/dashboard}">
                                 <i class="fa-solid fa-shop"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="menu-trabajador">
+                            <a class="dropdown-item" th:href="@{/admin/servicios}">
+                                <i class="fa-solid fa-stethoscope"></i> Servicios (CRUD)
+                            </a>
+                        </li>
+                        <li class="menu-trabajador">
+                            <a class="dropdown-item" th:href="@{/admin/productos}">
+                                <i class="fa-solid fa-box"></i> Productos (CRUD)
+                            </a>
+                        </li>
+                        <li class="menu-trabajador">
+                            <a class="dropdown-item" th:href="@{/admin/medicos}">
+                                <i class="fa-solid fa-user-doctor"></i> Médicos (CRUD)
+                            </a>
+                        </li>
+                        <li class="menu-trabajador">
+                            <a class="dropdown-item" th:href="@{/admin/citas}">
+                                <i class="fa-solid fa-calendar-check"></i> Citas (CRUD)
+                            </a>
+                        </li>
+                        <li class="menu-trabajador">
+                            <a class="dropdown-item" th:href="@{/admin/usuarios}">
+                                <i class="fa-solid fa-users-gear"></i> Usuarios (CRUD)
                             </a>
                         </li>
 

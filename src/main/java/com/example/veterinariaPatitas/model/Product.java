@@ -21,6 +21,9 @@ public class Product {
     @Column(nullable = false)
     private double price;
 
+    @Column(length = 3)
+    private String currency;
+
     @Column(nullable = false)
     private int stock; 
 
@@ -30,14 +33,25 @@ public class Product {
     @Transient
     private int quantity; 
 
+    @Transient
+    private Double pricePen;
+
+    @Transient
+    private Double exchangeRateUsed;
+
     
     public Product() {}
 
     
     public Product(int id, String name, double price, int stock, String unit) {
+        this(id, name, price, stock, unit, "PEN");
+    }
+
+    public Product(int id, String name, double price, int stock, String unit, String currency) {
         this.id = id;
         this.name = name;
         this.price = price;
+        this.currency = currency;
         this.stock = stock;
         this.unit = unit;
         this.quantity = 0; 
@@ -68,6 +82,14 @@ public class Product {
         this.price = price;
     }
 
+    public String getCurrency() {
+        return normalizeCurrency(currency);
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = normalizeCurrency(currency);
+    }
+
     public int getStock() {
         return stock;
     }
@@ -90,5 +112,38 @@ public class Product {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public Double getPricePen() {
+        return pricePen;
+    }
+
+    public void setPricePen(Double pricePen) {
+        this.pricePen = pricePen;
+    }
+
+    public Double getExchangeRateUsed() {
+        return exchangeRateUsed;
+    }
+
+    public void setExchangeRateUsed(Double exchangeRateUsed) {
+        this.exchangeRateUsed = exchangeRateUsed;
+    }
+
+    public double getEffectivePricePen() {
+        if (pricePen != null) return pricePen;
+        return price;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void normalizePersistentFields() {
+        this.currency = normalizeCurrency(this.currency);
+    }
+
+    private String normalizeCurrency(String value) {
+        if (value == null || value.isBlank()) return "PEN";
+        String upper = value.trim().toUpperCase();
+        return "USD".equals(upper) ? "USD" : "PEN";
     }
 }

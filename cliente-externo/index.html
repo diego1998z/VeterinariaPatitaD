@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Externo - Estado Clínica</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<main class="wrapper">
+    <section class="panel">
+        <p class="eyebrow">Cliente externo</p>
+        <h1>Estado de la Veterinaria</h1>
+        <p class="subtitle">Consumo de API pública desde un entorno externo.</p>
+
+        <div class="actions">
+            <button id="btnCargar" type="button">Consultar API</button>
+            <span id="status">Esperando consulta...</span>
+        </div>
+
+        <div id="resultado" class="card hidden">
+            <p><strong>Clínica:</strong> <span id="nombreClinica"></span></p>
+            <p><strong>Dirección:</strong> <span id="direccion"></span></p>
+            <p><strong>Teléfono:</strong> <span id="telefono"></span></p>
+            <p><strong>Horario:</strong> <span id="horario"></span></p>
+            <p><strong>Atención activa:</strong> <span id="atencionActiva"></span></p>
+            <p><strong>Médicos registrados:</strong> <span id="medicosRegistrados"></span></p>
+            <p><strong>Fecha servidor:</strong> <span id="fechaServidor"></span></p>
+            <p><strong>Hora servidor:</strong> <span id="horaServidor"></span></p>
+        </div>
+    </section>
+</main>
+
+<script src="./app.js"></script>
+</body>
+</html>

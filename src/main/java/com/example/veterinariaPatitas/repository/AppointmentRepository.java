@@ -1,6 +1,7 @@
 package com.example.veterinariaPatitas.repository;
 
 import com.example.veterinariaPatitas.model.Appointment;
+import com.example.veterinariaPatitas.dto.AppointmentListDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import java.time.LocalDateTime;
@@ -26,4 +27,14 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
            "ORDER BY YEAR(a.dateTime) ASC, MONTH(a.dateTime) ASC")
     List<Object[]> countAppointmentsPerMonth();
     List<Appointment> findByDateTimeBetween(LocalDateTime startDateTime, LocalDateTime endDateTime);
+    List<Appointment> findByMedicoId(Long medicoId);
+
+    // Listado completo usando DTO y relaciones con Servicio y Médico
+    @Query("SELECT new com.example.veterinariaPatitas.dto.AppointmentListDTO(" +
+           "a.id, a.clientName, a.dateTime, s.name, s.price, m.nombre) " +
+           "FROM Appointment a " +
+           "JOIN a.service s " +
+           "LEFT JOIN a.medico m " +
+           "ORDER BY a.dateTime DESC")
+    List<AppointmentListDTO> findAppointmentList();
 }

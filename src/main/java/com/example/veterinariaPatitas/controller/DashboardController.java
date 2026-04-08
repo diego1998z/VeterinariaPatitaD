@@ -3,7 +3,6 @@ package com.example.veterinariaPatitas.controller;
 import com.example.veterinariaPatitas.service.AppointmentService;
 import com.example.veterinariaPatitas.service.SalesService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,7 +16,6 @@ public class DashboardController {
     private final SalesService salesService;
     private final AppointmentService appointmentService;
 //inyeccion de dependencias
-    @Autowired
     public DashboardController(SalesService salesService, AppointmentService appointmentService) {
         this.salesService = salesService;
         this.appointmentService = appointmentService;

@@ -16,6 +16,7 @@ import org.springframework.ui.Model;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.Map; 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,7 @@ import java.util.LinkedHashMap; // Importado para mantener el orden de los meses
 public class SalesService {
 
     private final double IGV_RATE = 0.18;
+    private static final Duration EXCHANGE_RATE_CACHE_TTL = Duration.ofMinutes(15);
 
     @Autowired
     private ProductRepository productRepository;
@@ -33,16 +35,26 @@ public class SalesService {
     @Autowired
     private SaleRepository saleRepository; // Repositorio de Ventas inyectado
 
-    //lista de productos inicial
+    @Autowired
+    private ApiPeruService apiPeruService;
+
+    private ExchangeRateInfo cachedExchangeRateInfo;
+    private LocalDateTime cachedExchangeRateAt;
+
+    /**
+     * Carga productos desde BD y prepara precios de visualizacion:
+     * - PEN: precio directo.
+     * - USD: precio convertido a PEN con tipo de cambio vigente.
+     */
     public List<Product> getInitialProducts() {
-        return productRepository.findAll();
+        List<Product> products = productRepository.findAll();
+        prepareProductsForDisplay(products);
+        return products;
     }
 
     //calcula totales 
     public void calculateTotals(List<Product> cart, Model model) {
-        double subtotal = cart.stream()
-                .mapToDouble(item -> item.getPrice() * item.getQuantity())//saca el precio por cantidad
-                .sum();
+        double subtotal = calculateSubtotal(cart);
         double tax = subtotal * IGV_RATE;
         double total = subtotal + tax;
 
@@ -51,7 +63,9 @@ public class SalesService {
         model.addAttribute("total", total);
     }
 
-    //añade al carrito, verifica que el producto exista y que haya stock por el id
+    /**
+     * Agrega item al carrito validando existencia, stock y conversion de moneda.
+     */
     public String addProductToCart(int productId, int quantity, List<Product> cart) {
         Optional<Product> productOpt = productRepository.findById(productId);
 //hace la verficacion sino manda error
@@ -63,6 +77,12 @@ public class SalesService {
 
         if (quantity <= 0 || quantity > product.getStock()) {
             return "Error: Cantidad inválida o stock insuficiente.";
+        }
+
+        // Prepara precio en soles si el producto esta en USD.
+        Product preparedProduct = cloneForDisplay(product, resolveExchangeRateInfo());
+        if ("USD".equals(preparedProduct.getCurrency()) && preparedProduct.getPricePen() == null) {
+            return "Error: No se pudo obtener tipo de cambio para productos en USD.";
         }
 
       //si el producto esta en el carrito, lo actualiza y lo suma   
@@ -78,15 +98,23 @@ public class SalesService {
                 return "Error: La cantidad total excede el stock disponible.";
             }
 //acutliza la cantidad y si no hay crea uno nuevo
+            if (existingItem.getPricePen() == null) {
+                existingItem.setPricePen(preparedProduct.getPricePen());
+                existingItem.setExchangeRateUsed(preparedProduct.getExchangeRateUsed());
+                existingItem.setCurrency(preparedProduct.getCurrency());
+            }
             existingItem.setQuantity(newTotalQty);
         } else {
             Product newItem = new Product(
-                    product.getId(),
-                    product.getName(),
-                    product.getPrice(),
-                    product.getStock(),
-                    product.getUnit()
+                    preparedProduct.getId(),
+                    preparedProduct.getName(),
+                    preparedProduct.getPrice(),
+                    preparedProduct.getStock(),
+                    preparedProduct.getUnit(),
+                    preparedProduct.getCurrency()
             );
+            newItem.setPricePen(preparedProduct.getPricePen());
+            newItem.setExchangeRateUsed(preparedProduct.getExchangeRateUsed());
             newItem.setQuantity(quantity);
             cart.add(newItem);
         }
@@ -94,8 +122,11 @@ public class SalesService {
         return "Producto agregado al carrito con éxito.";
     }
 
-    //finaliza la venta
+    /**
+     * Finaliza venta: descuenta stock, calcula totales y registra cabecera de venta.
+     */
     public List<Product> finalizeSale(List<Product> cart) {
+        prepareCartForDisplay(cart);
 //busca el producto y descuenta el stock
         for (Product cartItem : cart) {
             Optional<Product> productOpt = productRepository.findById(cartItem.getId());
@@ -108,9 +139,7 @@ public class SalesService {
         }
         
         // --- Cálculo de Totales para el registro de la Venta ---
-        double subtotal = cart.stream()
-                .mapToDouble(item -> item.getPrice() * item.getQuantity())
-                .sum();
+        double subtotal = calculateSubtotal(cart);
         double tax = subtotal * IGV_RATE;
         double total = subtotal + tax; 
         
@@ -122,6 +151,152 @@ public class SalesService {
         // Devuelve el carrito para que el controlador lo use en la redirección
         return new ArrayList<>(cart);
     }
+
+    public void prepareProductsForDisplay(List<Product> products) {
+        if (products == null || products.isEmpty()) return;
+        // Usa un solo tipo de cambio para toda la renderizacion de esta solicitud.
+        ExchangeRateInfo rateInfo = resolveExchangeRateInfo();
+        for (Product product : products) {
+            Product prepared = cloneForDisplay(product, rateInfo);
+            product.setCurrency(prepared.getCurrency());
+            product.setPricePen(prepared.getPricePen());
+            product.setExchangeRateUsed(prepared.getExchangeRateUsed());
+        }
+    }
+
+    public void prepareCartForDisplay(List<Product> cart) {
+        if (cart == null || cart.isEmpty()) return;
+        // Recalcula precios PEN para evitar nulls en carrito restaurado de sesion.
+        ExchangeRateInfo rateInfo = resolveExchangeRateInfo();
+        for (Product item : cart) {
+            if ("USD".equals(item.getCurrency())) {
+                if (item.getPricePen() == null) {
+                    if (item.getExchangeRateUsed() != null && item.getExchangeRateUsed() > 0) {
+                        item.setPricePen(roundMoney(item.getPrice() * item.getExchangeRateUsed()));
+                    } else if (rateInfo != null && rateInfo.venta() != null && rateInfo.venta() > 0) {
+                        item.setExchangeRateUsed(rateInfo.venta());
+                        item.setPricePen(roundMoney(item.getPrice() * rateInfo.venta()));
+                    }
+                }
+            } else {
+                item.setPricePen(roundMoney(item.getPrice()));
+                item.setExchangeRateUsed(1.0);
+            }
+        }
+    }
+
+    public double calculateSubtotal(List<Product> cart) {
+        if (cart == null || cart.isEmpty()) return 0.0;
+        return cart.stream()
+                .mapToDouble(item -> getUnitPricePen(item) * item.getQuantity())
+                .sum();
+    }
+
+    public double getUnitPricePen(Product product) {
+        if (product == null) return 0.0;
+        if (product.getPricePen() != null) return product.getPricePen();
+        if ("USD".equals(product.getCurrency())) {
+            ExchangeRateInfo rateInfo = resolveExchangeRateInfo();
+            if (rateInfo != null && rateInfo.venta() != null && rateInfo.venta() > 0) {
+                return roundMoney(product.getPrice() * rateInfo.venta());
+            }
+        }
+        return roundMoney(product.getPrice());
+    }
+
+    private Product cloneForDisplay(Product source, ExchangeRateInfo rateInfo) {
+        if (source == null) return null;
+        Product clone = new Product(
+                source.getId(),
+                source.getName(),
+                source.getPrice(),
+                source.getStock(),
+                source.getUnit(),
+                source.getCurrency()
+        );
+        clone.setQuantity(source.getQuantity());
+
+        if ("USD".equals(source.getCurrency())) {
+            // Conversion USD->PEN con tipo de cambio "venta".
+            if (rateInfo != null && rateInfo.venta() != null && rateInfo.venta() > 0) {
+                clone.setExchangeRateUsed(rateInfo.venta());
+                clone.setPricePen(roundMoney(source.getPrice() * rateInfo.venta()));
+            } else {
+                clone.setPricePen(null);
+                clone.setExchangeRateUsed(null);
+            }
+        } else {
+            clone.setExchangeRateUsed(1.0);
+            clone.setPricePen(roundMoney(source.getPrice()));
+        }
+
+        return clone;
+    }
+
+    private synchronized ExchangeRateInfo resolveExchangeRateInfo() {
+        LocalDateTime now = LocalDateTime.now();
+        if (cachedExchangeRateInfo != null && cachedExchangeRateAt != null) {
+            Duration age = Duration.between(cachedExchangeRateAt, now);
+            if (!age.minus(EXCHANGE_RATE_CACHE_TTL).isNegative()) {
+                // cache vencido, continuar
+            } else {
+                // Reutiliza cache para evitar llamar API externa en cada request.
+                return cachedExchangeRateInfo;
+            }
+        }
+
+        ExchangeRateInfo fresh = fetchLatestExchangeRate();
+        if (fresh != null) {
+            cachedExchangeRateInfo = fresh;
+            cachedExchangeRateAt = now;
+            return fresh;
+        }
+
+        return cachedExchangeRateInfo;
+    }
+
+    private ExchangeRateInfo fetchLatestExchangeRate() {
+        // Busca hasta 7 dias atras por si hoy no hay tipo de cambio publicado.
+        for (int i = 0; i < 7; i++) {
+            String fecha = LocalDate.now().minusDays(i).toString();
+            Map<String, Object> response = apiPeruService.consultarTipoCambio(fecha);
+            if (response == null || !Boolean.TRUE.equals(response.get("success"))) {
+                continue;
+            }
+
+            Object dataObj = response.get("data");
+            if (!(dataObj instanceof Map)) {
+                continue;
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> data = (Map<String, Object>) dataObj;
+
+            Double venta = toDouble(data.get("venta"));
+            if (venta == null || venta <= 0) {
+                continue;
+            }
+
+            String fechaRespuesta = data.get("fecha") == null ? fecha : data.get("fecha").toString();
+            return new ExchangeRateInfo(fechaRespuesta, venta);
+        }
+        return null;
+    }
+
+    private Double toDouble(Object value) {
+        if (value == null) return null;
+        if (value instanceof Number) return ((Number) value).doubleValue();
+        try {
+            return Double.parseDouble(value.toString().trim().replace(",", "."));
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private double roundMoney(double value) {
+        return Math.round(value * 100.0) / 100.0;
+    }
+
+    private record ExchangeRateInfo(String fecha, Double venta) {}
     
     // metodo para el dashboard
 
@@ -172,6 +347,7 @@ public class SalesService {
     }
 //guarda el producto en el repositorio
     public Product saveProduct(Product product) {
+        if (product == null) return null;
         return productRepository.save(product);
     }
 //añade stock al producto

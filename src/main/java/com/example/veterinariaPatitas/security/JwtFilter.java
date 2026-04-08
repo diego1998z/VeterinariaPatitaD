@@ -3,21 +3,21 @@ package com.example.veterinariaPatitas.security;
 
 import org.springframework.stereotype.Component;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;//roles y permisos
-import org.springframework.security.core.context.SecurityContextHolder;//almacena la info del usuario autenticado
-import org.springframework.util.StringUtils;//vverifica si una cadena tiene contenido
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.lang.NonNull;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
+
 @Component
-public class JwtFilter extends OncePerRequestFilter {//asegura una sola ejecucion por solicitud
+public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
@@ -27,36 +27,39 @@ public class JwtFilter extends OncePerRequestFilter {//asegura una sola ejecucio
         this.userDetailsService = userDetailsService;
     }
 
-    @Override //metodo que filtra cada solicitud http
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
-//lee el header de autorizacion
+    @Override
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
+        // 1) Lee cabecera Authorization: Bearer <token>
         String header = request.getHeader("Authorization");
-        if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {//verifica que tenga el token
-            String token = header.substring(7); 
-            if (jwtUtil.validateToken(token)) {//valida el token y la informacion dentro
+        if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
+            String token = header.substring(7);
+            // 2) Valida firma y vencimiento del JWT.
+            if (jwtUtil.validateToken(token)) {
                 String username = jwtUtil.getUsernameFromToken(token);
-                String role = jwtUtil.getRoleFromToken(token);
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                // creo el objeto de autenticacion con el rol
-                UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                List.of(new SimpleGrantedAuthority(role))
-                        );
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            }//verifica que el usuario cumple con el token y puede seguir
+                // 3) Si no hay sesion autenticada en el contexto, autentica con datos de BD.
+                if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    UsernamePasswordAuthenticationToken auth =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
+            }
         }
 
-        filterChain.doFilter(request, response);//verifica el siguiente filtro en la cadena
+        // 4) Continua la cadena de filtros.
+        filterChain.doFilter(request, response);
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        // se aplica el filtro solo para las rutas api
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        // Solo se filtran rutas API; vistas web usan formLogin y sesion.
         String path = request.getRequestURI();
         return !path.startsWith("/api/");
     }

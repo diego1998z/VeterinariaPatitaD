@@ -14,8 +14,6 @@
           crossorigin="anonymous">
     <!-- Font Awesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- jsPDF CDN para generar la boleta -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- Meta con username desde sesión, usado por el JS para imprimir el cliente en la boleta -->
     <meta name="username" th:if="${session.usuarioLogeado != null}" th:content="${session.usuarioLogeado}" />
 </head>
@@ -50,8 +48,14 @@
                                  th:class="|card h-100 card-product shadow-sm border-start border-5 ${product.stock > 0 ? 'border-patitas' : 'border-secondary'}|">
                                 <div class="card-body">
                                     <h3 class="card-title h5 fw-bold" th:text="${product.name}"></h3>
-                                    <p class="card-text display-6 fw-bolder text-patitas mb-3" 
+                                    <p class="card-text display-6 fw-bolder text-patitas mb-1"
+                                       th:if="${product.currency == 'USD'}"
+                                       th:text="|US$ ${#numbers.formatDecimal(product.price, 1, 2)}|"></p>
+                                    <p class="card-text display-6 fw-bolder text-patitas mb-1"
+                                       th:if="${product.currency != 'USD'}"
                                        th:text="|S/. ${#numbers.formatDecimal(product.price, 1, 2)}|"></p>
+                                    <p class="card-text text-muted mb-3" th:if="${product.currency == 'USD'}"
+                                       th:text="|Referencia en soles: S/. ${#numbers.formatDecimal(product.pricePen != null ? product.pricePen : 0, 1, 2)}|"></p>
                                     <p class="card-text text-muted mb-3" th:text="|Unidad: ${product.unit}|"></p>
                                     <!-- añade el producto al scarrito y descuenta el stock-->
                                     <form th:action="@{/add_to_cart}" method="post">
@@ -96,13 +100,15 @@
                                         class="list-group-item d-flex justify-content-between align-items-center bg-light rounded mb-2 border-0">
                                         <div>
                                             <p class="fw-semibold text-dark mb-0" th:text="${item.name}"></p>
-                                            <p class="text-sm text-muted mb-0" 
-                                               th:text="|${item.quantity} x S/. ${#numbers.formatDecimal(item.price, 1, 2)}|"></p>
+                                            <p class="text-sm text-muted mb-0" th:if="${item.currency == 'USD'}"
+                                               th:text="|${item.quantity} x US$ ${#numbers.formatDecimal(item.price, 1, 2)} (S/. ${#numbers.formatDecimal(item.pricePen != null ? item.pricePen : 0, 1, 2)} c/u)|"></p>
+                                            <p class="text-sm text-muted mb-0" th:if="${item.currency != 'USD'}"
+                                               th:text="|${item.quantity} x S/. ${#numbers.formatDecimal(item.pricePen != null ? item.pricePen : item.price, 1, 2)}|"></p>
                                         </div>
                                         <!-- Remueve el producto del cuento-->
                                         <div class="d-flex align-items-center gap-2">
                                             <span class="fw-bold text-patitas me-2" 
-                                                  th:text="|S/. ${#numbers.formatDecimal(item.price * item.quantity, 1, 2)}|"></span>
+                                                  th:text="|S/. ${#numbers.formatDecimal((item.pricePen != null ? item.pricePen : item.price) * item.quantity, 1, 2)}|"></span>
                                             <form th:action="@{/remove_from_cart}" method="post" style="display:inline;">
                                                 <input type="hidden" name="productId" th:value="${item.id}" />
                                                 <button type="submit" class="btn btn-sm text-danger p-0 border-0" title="Eliminar">
@@ -130,6 +136,16 @@
                                     <span>Total a Pagar:</span>
                                     <span id="total" 
                                           th:text="|S/. ${#numbers.formatDecimal(total, 1, 2)}|">S/. 0.00</span>
+                                </div>
+                            </div>
+
+                            <div id="exchange-rate-box" class="alert alert-light border mt-3 mb-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-semibold text-secondary">Tipo de cambio (USD)</span>
+                                    <small id="exchange-rate-date" class="text-muted"></small>
+                                </div>
+                                <div id="exchange-rate-content" class="small text-muted mt-2">
+                                    Cargando tipo de cambio...
                                 </div>
                             </div>
                             
@@ -170,7 +186,7 @@
     <!-- Botón flotante ligeramente elevado para no quedar tapado por el footer -->
     <div th:if="${finalCart != null}" class="mx-auto text-center my-3" 
          style="max-width:1140px; position:fixed; left:50%; transform:translateX(-50%); bottom:80px; z-index:1050;">
-        <button id="download-invoice-button" onclick="generateInvoicePDF()" 
+        <button id="download-invoice-button"
                 class="btn btn-success">
             <i class="fa-solid fa-file-pdf me-2"></i> Descargar Boleta
         </button>
@@ -183,168 +199,132 @@
             crossorigin="anonymous"></script>
 
     <script>
-        const IGV_RATE = 0.18;
-//busca los datos del carrito, los flashattributes
-        function generateInvoicePDF() {
-            const finalCartElement = document.getElementById('final-cart-data');
-            if (!finalCartElement) {
-                console.error('No se encontraron datos de la venta finalizada');
-                return;
-            }
-
-            let finalCart = null;
-            // intenta leer el Json la informacion del carrito
-            const text = finalCartElement.textContent && finalCartElement.textContent.trim();
-            if (text) {
-                try {
-                    finalCart = JSON.parse(text);
-                } catch (e) {
-                    console.warn('No se pudo parsear JSON desde final-cart-data, se intentará leer data-attributes', e);
-                    finalCart = null;
-                }
-            }
-
-            // Si hay fallas, intenta reconstruir la lista
-            if (!finalCart) {
-                const lis = finalCartElement.querySelectorAll('li');
-                if (!lis || lis.length === 0) {
-                    console.error('No se encontraron items de la venta en final-cart-data');
-                    return;
-                }
-                finalCart = Array.from(lis).map(li => ({
-                    name: li.getAttribute('data-name') || '',
-                    price: parseFloat(li.getAttribute('data-price')) || 0,
-                    quantity: parseInt(li.getAttribute('data-quantity')) || 0
-                }));
-            }
-
-            // mostrar el contenido recontruido 
-            try {
-                console.log('generateInvoicePDF: finalCart reconstruido', finalCart);
-            } catch (e) {
-                console.warn('No se pudo loggear finalCart', e);
-            }
-            // verifica que jsPDF este cargado
-            if (!window.jspdf) {
-                console.error('jsPDF no está cargado (window.jspdf undefined). Revisa la pestaña Network y que la CDN no esté bloqueada.');
-                return;
-            }
-            try {
-                //obtiene los totales
-                const subtotal = parseCurrency(document.getElementById('subtotal').textContent);
-                const tax = parseCurrency(document.getElementById('tax').textContent);
-                const total = parseCurrency(document.getElementById('total').textContent);
-                
-                // Resolver constructor de jsPDF para compatibilidad
-                let jsPDFConstructor = null;
-                if (window.jspdf && window.jspdf.jsPDF) {
-                    jsPDFConstructor = window.jspdf.jsPDF;
-                } else if (window.jsPDF) {
-                    jsPDFConstructor = window.jsPDF;
-                } else if (typeof window.jspdf === 'function') {
-                    jsPDFConstructor = window.jspdf;
-                }
-                // Si no se encuentra, muestra error
-                if (!jsPDFConstructor) {
-                    console.error('jsPDF no se encontró: window.jspdf o window.jsPDF indefinido.');
-                    return;
-                }
-
-                const doc = new jsPDFConstructor();
-                const pageWidth = doc.internal.pageSize.getWidth();
-                let y = 15;
-
-                // Encabezado
-                doc.setFontSize(18);
-                doc.setTextColor(53, 66, 74);
-                doc.text("Clínica Veterinaria PATITAS", pageWidth / 2, y, { align: "center" });
-                y += 7;
-                doc.setFontSize(10);
-                doc.setTextColor(100);
-                doc.text("RUC: 20512345678 | Villa El Salvador, Lima", pageWidth / 2, y, { align: "center" });
-                y += 10;
-
-                // Incluir nombre de usuario (si existe) como "Factura de <usuario>" debajo del encabezado
-                try {
-                    const username = document.querySelector('meta[name="username"]')?.getAttribute('content') || 'Cliente General';
-                    doc.setFontSize(12);
-                    doc.setTextColor(34, 34, 34);
-                    doc.text(`Factura de: ${username}`, pageWidth / 2, y, { align: "center" });
-                    y += 8;
-                } catch (e) {
-                    // no bloquear la generación si hay problemas al leer el meta
-                    console.warn('No se pudo obtener el username para la boleta', e);
-                }
-
-                // Número de boleta
-                doc.setFontSize(14);
-                doc.setTextColor(0, 191, 174);
-                doc.text("BOLETA DE VENTA N° 0001-", 15, y);
-                doc.setTextColor(0);
-                doc.text(String(Math.floor(Math.random() * 9000) + 1000), 75, y);
-                y += 5;
-
-                // Fecha
-                const now = new Date();
-                doc.setFontSize(10);
-                doc.text(`Fecha: ${now.toLocaleDateString('es-ES')}`, 15, y);
-                doc.text(`Hora: ${now.toLocaleTimeString('es-ES')}`, pageWidth - 15, y, { align: "right" });
-                y += 8;
-
-                // Tabla de productos
-                doc.setFillColor(230);
-                doc.rect(15, y, pageWidth - 30, 7, 'F');
-                doc.setFont(undefined, 'bold');
-                doc.text("Cant.", 17, y + 5);
-                doc.text("Descripción", 40, y + 5);
-                doc.text("P. Unit.", 135, y + 5);
-                doc.text("Total", pageWidth - 17, y + 5, { align: "right" });
-                doc.setFont(undefined, 'normal');
-                y += 7;
-
-                finalCart.forEach(item => {
-                    if (y > 270) {
-                        doc.addPage();
-                        y = 15;
-                    }
-                    const lineTotal = item.price * item.quantity;
-                    doc.text(String(item.quantity), 17, y + 5);
-                    doc.text(item.name, 40, y + 5);
-                    doc.text(item.price.toFixed(2), 135, y + 5);
-                    doc.text(lineTotal.toFixed(2), pageWidth - 17, y + 5, { align: "right" });
-                    y += 7;
-                });
-                y += 5;
-
-                // Totales
-                doc.line(15, y, pageWidth - 15, y);
-                y += 3;
-                doc.text("Subtotal:", pageWidth - 50, y);
-                doc.text(`S/. ${subtotal.toFixed(2)}`, pageWidth - 17, y, { align: "right" });
-                y += 5;
-                doc.text(`IGV (${(IGV_RATE * 100)}%):`, pageWidth - 50, y);
-                doc.text(`S/. ${tax.toFixed(2)}`, pageWidth - 17, y, { align: "right" });
-                y += 7;
-                doc.setFontSize(12);
-                doc.setFont(undefined, 'bold');
-                doc.text("TOTAL:", pageWidth - 50, y);
-                doc.text(`S/. ${total.toFixed(2)}`, pageWidth - 17, y, { align: "right" });
-                y += 10;
-
-                // Pie
-                doc.setFontSize(10);
-                doc.setFont(undefined, 'normal');
-                doc.text("¡Gracias por su compra!", pageWidth / 2, y + 5, { align: "center" });
-
-                doc.save(`Boleta_PatitasVet_${now.getTime()}.pdf`);
-            } catch (e) {
-                console.error("Error al generar el PDF:", e);
-            }
-        }
-        //funcion para parsear el texto de moneda a numero
         function parseCurrency(text) {
             if (!text) return 0;
-            return parseFloat(text.replace('S/. ', '').replace(',', '')) || 0;
+            let normalized = text
+                .replace("S/.", "")
+                .replace("S/", "")
+                .replace(/\s/g, "")
+                .replace(/[^0-9,.-]/g, "");
+
+            const hasComma = normalized.includes(",");
+            const hasDot = normalized.includes(".");
+
+            if (hasComma && hasDot) {
+                // Usa como separador decimal el último símbolo que aparezca.
+                if (normalized.lastIndexOf(",") > normalized.lastIndexOf(".")) {
+                    normalized = normalized.replace(/\./g, "").replace(",", ".");
+                } else {
+                    normalized = normalized.replace(/,/g, "");
+                }
+            } else if (hasComma) {
+                // Formato tipo 105,02
+                normalized = normalized.replace(/\./g, "").replace(",", ".");
+            } else {
+                // Formato tipo 105.02 o entero
+                normalized = normalized.replace(/,/g, "");
+            }
+
+            const value = Number.parseFloat(normalized);
+            return Number.isFinite(value) ? value : 0;
+        }
+
+        function buildFinalCartPayload() {
+            const finalCartElement = document.getElementById("final-cart-data");
+            if (!finalCartElement) return [];
+
+            const listItems = finalCartElement.querySelectorAll("#final-cart-list li");
+            if (!listItems || listItems.length === 0) return [];
+
+            return Array.from(listItems).map(li => ({
+                name: li.getAttribute("data-name") || "",
+                price: parseFloat(li.getAttribute("data-price")) || 0,
+                quantity: parseInt(li.getAttribute("data-quantity"), 10) || 0
+            }));
+        }
+
+        async function generateInvoicePDF() {
+            const items = buildFinalCartPayload();
+            if (!items.length) {
+                alert("No hay datos de boleta para descargar.");
+                return;
+            }
+
+            const subtotal = parseCurrency(document.getElementById("subtotal")?.textContent);
+            const tax = parseCurrency(document.getElementById("tax")?.textContent);
+            const total = parseCurrency(document.getElementById("total")?.textContent);
+            const username = document.querySelector('meta[name="username"]')?.getAttribute("content") || "Cliente General";
+
+            const payload = { items, subtotal, tax, total, username };
+
+            try {
+                const response = await fetch("/invoice/download", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error("No se pudo generar la boleta en el servidor.");
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `Boleta_PatitasVet_${Date.now()}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error(error);
+                alert("Error al descargar la boleta: " + (error.message || "intenta nuevamente"));
+            }
+        }
+
+        async function loadExchangeRate() {
+            const content = document.getElementById('exchange-rate-content');
+            const dateElement = document.getElementById('exchange-rate-date');
+            if (!content || !dateElement) return;
+
+            try {
+                let payload = null;
+                const today = new Date();
+
+                for (let i = 0; i < 7; i++) {
+                    const requestDate = new Date(today);
+                    requestDate.setDate(today.getDate() - i);
+                    const fecha = requestDate.toISOString().slice(0, 10);
+
+                    const response = await fetch('/api/public/tipo-cambio', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ fecha })
+                    });
+                    const candidate = await response.json();
+                    if (response.ok && candidate.success) {
+                        payload = candidate;
+                        break;
+                    }
+                }
+
+                if (!payload || !payload.success) {
+                    throw new Error('No se pudo consultar el tipo de cambio reciente.');
+                }
+
+                const data = payload.data || {};
+                const compraValue = Number(data.compra);
+                const ventaValue = Number(data.venta);
+                const compra = Number.isFinite(compraValue) ? compraValue.toFixed(3) : 'N/D';
+                const venta = Number.isFinite(ventaValue) ? ventaValue.toFixed(3) : 'N/D';
+
+                content.textContent = `Compra: S/ ${compra} | Venta: S/ ${venta}`;
+                dateElement.textContent = data.fecha ? `Fecha: ${data.fecha}` : '';
+            } catch (error) {
+                content.textContent = error.message || 'Tipo de cambio no disponible.';
+                dateElement.textContent = '';
+            }
         }
 
         
@@ -358,6 +338,8 @@
         } else {
             console.log('Botón de descarga no presente. Si existe finalCart, recarga la página y revisa la consola.');
         }
+
+        loadExchangeRate();
     </script>
 
     <footer>

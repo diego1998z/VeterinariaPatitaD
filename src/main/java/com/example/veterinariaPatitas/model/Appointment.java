@@ -16,11 +16,20 @@ public class Appointment {
     @JoinColumn(name = "servicio_id", nullable = false)
     private ServiceVet service;
 
+    @Column(name = "servicio_nombre", nullable = false, length = 100)
+    private String servicioNombre;
+
+    @Column(name = "servicio_precio", nullable = false)
+    private Double servicioPrecio;
+
     @Column(nullable = false)
     private LocalDateTime dateTime;
 
     @Column(nullable = false, length = 100)
     private String clientName;
+
+    @Column(length = 8)
+    private String clientDni;
  //relacion muchos a uno con medico por id
     @ManyToOne
     @JoinColumn(name = "medico_id")
@@ -59,6 +68,22 @@ public class Appointment {
         this.service = service;
     }
 
+    public String getServicioNombre() {
+        return servicioNombre;
+    }
+
+    public void setServicioNombre(String servicioNombre) {
+        this.servicioNombre = servicioNombre;
+    }
+
+    public Double getServicioPrecio() {
+        return servicioPrecio;
+    }
+
+    public void setServicioPrecio(Double servicioPrecio) {
+        this.servicioPrecio = servicioPrecio;
+    }
+
     public LocalDateTime getDateTime() {
         return dateTime;
     }
@@ -73,5 +98,30 @@ public class Appointment {
 
     public void setClientName(String clientName) {
         this.clientName = clientName;
+    }
+
+    public String getClientDni() {
+        return clientDni;
+    }
+
+    public void setClientDni(String clientDni) {
+        this.clientDni = clientDni;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void syncServicioNombre() {
+        if (service != null && service.getName() != null) {
+            this.servicioNombre = service.getName();
+        }
+        if (this.servicioNombre == null) {
+            this.servicioNombre = "Sin servicio";
+        }
+        if (service != null) {
+            this.servicioPrecio = service.getPrice();
+        }
+        if (this.servicioPrecio == null) {
+            this.servicioPrecio = 0.0;
+        }
     }
 }

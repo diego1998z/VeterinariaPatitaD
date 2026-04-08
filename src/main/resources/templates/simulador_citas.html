@@ -50,9 +50,27 @@
 
                     <!-- Cliente -->
                     <div class="mb-3">
-                        <label for="clientName" class="form-label fw-semibold">Nombre</label>
+                        <label for="clientDni" class="form-label fw-semibold">DNI del titular</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="clientDni"
+                                   name="clientDni" maxlength="8" pattern="[0-9]{8}" required>
+                            <button type="button" id="buscarDniBtn" class="btn btn-outline-secondary">
+                                Consultar DNI
+                            </button>
+                        </div>
+                        <div id="dniStatus" class="form-text">Ingrese 8 dígitos y consulte para autocompletar el nombre.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="clientName" class="form-label fw-semibold">Nombre completo</label>
                         <input type="text" class="form-control" id="clientName"
                                name="clientName" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="clientEmail" class="form-label fw-semibold">Correo (para confirmación)</label>
+                        <input type="email" class="form-control" id="clientEmail"
+                               name="clientEmail" placeholder="cliente@correo.com">
                     </div>
 
                     <!-- verifica que el servicio este habilitado y muestra el valor por el id -->
@@ -67,29 +85,13 @@
                         </select>
                     </div>
 
-                    <!-- muestra la lista de medicos disponibles y las validaciones, extrae estos datos -->
-                    <div class="mb-3">
-                        <label for="medicoId" class="form-label fw-semibold">Médico</label>
-                        <select id="medicoId" name="medicoId" class="form-select" required>
-                            <option value="">Seleccione un médico</option>
-
-                            <option th:each="med : ${allMedicos}"
-                                    th:value="${med.id}"
-                                    th:text="${med.nombre} + ' - ' + ${med.especialidad} + ' (' + ${#temporals.format(med.horarioInicio,'HH:mm')} + ' - ' + ${#temporals.format(med.horarioFin,'HH:mm')} + ')'"
-                                    th:attr="data-servicio-id=${med.servicio != null ? med.servicio.id : ''},
-                                             data-horario-inicio=${#temporals.format(med.horarioInicio,'HH:mm')},
-                                             data-horario-fin=${#temporals.format(med.horarioFin,'HH:mm')}">
-                            </option>
-                        </select>
-                        <div class="form-text">Elige un servicio y una hora para ver los médicos disponibles.</div>
-                    </div>
-
                     <div class="row">
                         <!-- Fecha -->
                         <div class="col-md-6 mb-3">
                             <label for="date" class="form-label fw-semibold">Fecha</label>
                             <input type="date" class="form-control" id="date"
                                    name="date" th:min="${minDate}" required>
+                            <div class="form-text">Atención regular de lunes a viernes.</div>
                         </div>
 
                         <!-- Hora -->
@@ -107,7 +109,27 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="w-100 btn btn-patitas fw-bold py-2 mt-3">
+                    <!-- muestra la lista de medicos disponibles y las validaciones, extrae estos datos -->
+                    <div class="mb-3">
+                        <label for="medicoId" class="form-label fw-semibold">Médico</label>
+                        <select id="medicoId" name="medicoId" class="form-select" required>
+                            <option value="">Seleccione un médico</option>
+
+                            <option th:each="med : ${allMedicos}"
+                                    th:value="${med.id}"
+                                    th:text="|${med.nombre} - ${med.especialidad} (${med.horarioInicio != null ? #temporals.format(med.horarioInicio,'HH:mm') : '--:--'} - ${med.horarioFin != null ? #temporals.format(med.horarioFin,'HH:mm') : '--:--'})|"
+                                    th:attr="data-servicio-id=${med.servicio != null ? med.servicio.id : ''},
+                                             data-horario-inicio=${med.horarioInicio != null ? #temporals.format(med.horarioInicio,'HH:mm') : ''},
+                                             data-horario-fin=${med.horarioFin != null ? #temporals.format(med.horarioFin,'HH:mm') : ''}">
+                            </option>
+                        </select>
+                        <div class="form-text">Elige un servicio y una hora para ver los médicos disponibles.</div>
+                        <div id="medico-empty" class="text-danger small mt-1 d-none">
+                            No hay médicos disponibles para ese servicio y hora.
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitAppointment" class="w-100 btn btn-patitas fw-bold py-2 mt-3">
                         <i class="fa-solid fa-calendar-plus me-2"></i> Agendar Cita
                     </button>
                 </form>
@@ -134,6 +156,8 @@
                                    th:text="${appointment.service.name}"></p>
                                 <p class="text-sm text-muted mb-0"
                                    th:text="${appointment.clientName}"></p>
+                                <p class="text-sm text-muted mb-0" th:if="${appointment.clientDni != null}"
+                                   th:text="|DNI: ${appointment.clientDni}|"></p>
                             </div>
 
                             <div class="text-end">
@@ -163,6 +187,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const serviceSelect = document.getElementById('serviceId');
     const timeSelect = document.getElementById('time');
     const medicoSelect = document.getElementById('medicoId');
+    const dateInput = document.getElementById('date');
+    const submitBtn = document.getElementById('submitAppointment');
+    const medicoEmpty = document.getElementById('medico-empty');
+    const dniInput = document.getElementById('clientDni');
+    const clientNameInput = document.getElementById('clientName');
+    const buscarDniBtn = document.getElementById('buscarDniBtn');
+    const dniStatus = document.getElementById('dniStatus');
 
     // crea una copia de las opciones de medicos
     const originalOptions = Array.from(medicoSelect.options).map(o => ({
@@ -190,8 +221,85 @@ document.addEventListener('DOMContentLoaded', () => {
         return h >= i && h <= f;
     };
 
+    const isWeekend = dateValue => {
+        if (!dateValue) return false;
+        const day = new Date(`${dateValue}T00:00:00`).getDay();
+        return day === 0 || day === 6;
+    };
+
+    const validateBusinessDay = () => {
+        if (!dateInput) return true;
+        if (isWeekend(dateInput.value)) {
+            dateInput.setCustomValidity('Seleccione una fecha de lunes a viernes.');
+            return false;
+        }
+        dateInput.setCustomValidity('');
+        return true;
+    };
+
+    const setDniStatus = (text, kind = 'muted') => {
+        if (!dniStatus) return;
+        dniStatus.textContent = text;
+        dniStatus.classList.remove('text-danger', 'text-success', 'text-muted');
+        const cssClass = kind === 'danger' ? 'text-danger' : kind === 'success' ? 'text-success' : 'text-muted';
+        dniStatus.classList.add(cssClass);
+    };
+
+    async function consultarDni() {
+        const dni = (dniInput?.value || '').trim();
+        if (!/^\d{8}$/.test(dni)) {
+            setDniStatus('El DNI debe tener 8 dígitos.', 'danger');
+            return;
+        }
+
+        if (buscarDniBtn) {
+            buscarDniBtn.disabled = true;
+            buscarDniBtn.textContent = 'Consultando...';
+        }
+        setDniStatus('Consultando APIPeru...', 'muted');
+
+        try {
+            const response = await fetch('/api/public/dni', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dni })
+            });
+
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.message || 'No se pudo consultar el DNI.');
+            }
+
+            const data = payload.data || {};
+            if (clientNameInput && data.nombreCompleto) {
+                clientNameInput.value = data.nombreCompleto;
+            }
+            setDniStatus('DNI validado correctamente.', 'success');
+        } catch (error) {
+            setDniStatus(error.message || 'Error al consultar DNI.', 'danger');
+        } finally {
+            if (buscarDniBtn) {
+                buscarDniBtn.disabled = false;
+                buscarDniBtn.textContent = 'Consultar DNI';
+            }
+        }
+    }
+
+    const updateSubmitState = () => {
+        const optionsCount = medicoSelect.querySelectorAll('option').length;
+        const hasMedicos = optionsCount > 1;
+        const hasValidDate = validateBusinessDay();
+        if (medicoEmpty) {
+            medicoEmpty.classList.toggle('d-none', hasMedicos);
+        }
+        if (submitBtn) {
+            submitBtn.disabled = !hasMedicos || !hasValidDate;
+        }
+    };
+
     // Función principal de filtrado
     function filterMedicos() {
+        const selectedMedico = medicoSelect.value;
         const service = serviceSelect.value;
         const hora = timeSelect.value;
 
@@ -217,11 +325,54 @@ document.addEventListener('DOMContentLoaded', () => {
             option.textContent = opt.text;
             medicoSelect.appendChild(option);
         });
+
+        if (selectedMedico) {
+            const exists = Array.from(medicoSelect.options)
+                .some(o => o.value === selectedMedico);
+            if (exists) {
+                medicoSelect.value = selectedMedico;
+            }
+        }
+
+        const available = Array.from(medicoSelect.options).filter(o => o.value);
+        if (!medicoSelect.value && available.length === 1) {
+            medicoSelect.value = available[0].value;
+        }
+
+        updateSubmitState();
+    }
+
+    if (buscarDniBtn) {
+        buscarDniBtn.addEventListener('click', consultarDni);
+    }
+    if (dniInput) {
+        dniInput.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                consultarDni();
+            }
+        });
+        dniInput.addEventListener('input', () => {
+            dniInput.value = dniInput.value.replace(/\D/g, '').slice(0, 8);
+            setDniStatus('Ingrese 8 dígitos y consulte para autocompletar el nombre.', 'muted');
+        });
     }
 
     // muestra la lista de medicos disponibles segun los cambios
     serviceSelect.addEventListener('change', filterMedicos);
     timeSelect.addEventListener('change', filterMedicos);
+    medicoSelect.addEventListener('change', updateSubmitState);
+    if (dateInput) {
+        dateInput.addEventListener('change', updateSubmitState);
+    }
+    setDniStatus('Ingrese 8 dígitos y consulte para autocompletar el nombre.', 'muted');
+
+    // Filtrar al cargar si ya hay selecciones
+    if (serviceSelect.value || timeSelect.value) {
+        filterMedicos();
+    } else {
+        updateSubmitState();
+    }
 });
 </script>
 

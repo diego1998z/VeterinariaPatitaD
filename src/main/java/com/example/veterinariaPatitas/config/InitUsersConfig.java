@@ -21,6 +21,7 @@ public class InitUsersConfig {
 
             trabajador.setUsuario("trabajador");
             trabajador.setContrasena(encoder.encode("123456"));//spring security cifra la contra
+            trabajador.setEmail("diieego.brz@gmail.com");
             trabajador.setRole("TRABAJADOR");
             usuarioRepository.save(trabajador);
             System.out.println("TRABAJADOR actualizado/creado ✔");
@@ -30,6 +31,7 @@ public class InitUsersConfig {
                     .orElse(new Usuario());
             clientePrueba.setUsuario("cliente1");
             clientePrueba.setContrasena(encoder.encode("123456"));//cifra la contra
+            clientePrueba.setEmail("cliente1@patitas.local");
             clientePrueba.setRole("CLIENTE"); 
             usuarioRepository.save(clientePrueba);
             System.out.println("CLIENTE de prueba actualizado/creado ✔");
