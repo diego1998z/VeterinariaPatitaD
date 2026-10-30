@@ -233,7 +233,7 @@ public class DataInitializer {
             if (existing == 0) {
                 Product p1 = new Product();
                 p1.setName("Shampoo Antipulgas para Perro");
-                p1.setPrice(49.90);
+                p1.setPrice(50.00);
                 p1.setStock(20);
                 p1.setUnit("Frasco 250ml");
                 productRepo.save(p1);
