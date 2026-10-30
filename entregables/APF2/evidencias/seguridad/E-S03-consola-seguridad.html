@@ -1,0 +1,8 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Consola seguridad</title><style>body{font-family:Segoe UI,Arial;background:#f4f7fb;color:#17233b;margin:0;padding:36px}.card{background:white;max-width:1050px;margin:auto;padding:30px 36px;border-radius:12px;box-shadow:0 4px 20px #0002}h1{color:#123b69;margin-top:0}.ok{color:#087f23;font-weight:700}.meta{color:#566}table{border-collapse:collapse;width:100%;margin:20px 0}th{background:#123b69;color:#fff}th,td{padding:12px;border:1px solid #d8dee8;text-align:left}.pass{background:#eaf7ed;color:#087f23;font-weight:700}pre{background:#111827;color:#d1fae5;padding:18px;border-radius:8px;white-space:pre-wrap;font-size:13px}</style></head><body><div class="card"><h1>Consola Maven - Seguridad</h1><pre>SECURITY_RESULT|scenario=anonymous_dashboard|expected=redirect_login|actual=redirect_login|status=PASS
+SECURITY_RESULT|scenario=trabajador_dashboard|expected=200|actual=200|status=PASS
+SECURITY_RESULT|scenario=cliente_dashboard|expected=403|actual=403|status=PASS
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.829 s -- in com.example.veterinariaPatitas.security.SecurityAccessControlTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+[INFO] Total time:  12.414 s
+[INFO] Finished at: 2026-10-30T10:38:10-05:00</pre></div></body></html>
