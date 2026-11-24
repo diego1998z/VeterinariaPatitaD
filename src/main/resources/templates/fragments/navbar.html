@@ -2,13 +2,13 @@
      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
      th:attr="data-authenticated=${#authorization.expression('isAuthenticated()')},
               data-role=${#authorization.expression('hasAuthority(''TRABAJADOR'')') ? 'TRABAJADOR' : (#authorization.expression('hasAuthority(''CLIENTE'')') ? 'CLIENTE' : '')}"
-     class="navbar navbar-expand-lg navbar-dark" style="background-color:#35424a;">
+     class="navbar navbar-expand-lg navbar-dark patitas-navbar" style="background-color:#35424a;">
     <div class="container">
 
         <!-- LOGO -->
         <a class="navbar-brand d-flex align-items-center gap-2" th:href="@{/}">
             <img th:src="@{/img/portadafondo.png}" alt="Veterinaria Patitas"
-                 class="rounded-circle object-fit-cover" style="width:60px; height:60px;">
+                 class="navbar-logo rounded-circle object-fit-cover">
             <span class="fw-bolder text-uppercase" style="color:#00bfae; font-family: Montserrat, sans-serif;">
                 Veterinaria Patitas
             </span>
