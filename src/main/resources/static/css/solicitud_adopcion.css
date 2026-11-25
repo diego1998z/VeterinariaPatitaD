@@ -1,0 +1,52 @@
+.adoption-page {
+    min-height: calc(100vh - 150px);
+    padding-block: 2rem;
+}
+
+.adoption-card {
+    border: 0;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.adoption-pet-summary {
+    background: #e8f6f6;
+    border-radius: 0.75rem;
+    padding: 1rem;
+}
+
+.adoption-pet-summary img {
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.adoption-form .form-label,
+.adoption-form legend {
+    font-weight: 700;
+    color: #24343d;
+}
+
+.required-note,
+.form-text {
+    color: #5c6670;
+}
+
+.adoption-submit {
+    min-height: 48px;
+}
+
+@media (max-width: 575.98px) {
+    .adoption-page {
+        padding-block: 1rem;
+    }
+
+    .adoption-card .card-body {
+        padding: 1.25rem;
+    }
+
+    .adoption-pet-summary {
+        text-align: center;
+    }
+}

@@ -84,7 +84,7 @@ h3 {
     color: #343a40;
 }
 
-.INFO-PERRITOS button {
+.INFO-PERRITOS .adoption-link {
     background-color: #007bff;
     color: #fff;
     border: none;
@@ -93,14 +93,165 @@ h3 {
     cursor: pointer;
     margin-top: auto;
     transition: background-color 0.3s ease;
+    text-decoration: none;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.INFO-PERRITOS button:hover {
+.INFO-PERRITOS .adoption-link:hover,
+.INFO-PERRITOS .adoption-link:focus-visible {
     background-color: #0056b3;
+    color: #fff;
+}
 
+.adoption-carousel__controls {
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    .custom-main-card {
+        width: min(100% - 1.5rem, 30rem);
+        padding: 1.25rem !important;
+    }
+
+    .section-container {
+        min-width: 0;
+    }
+
+    .adoption-carousel {
+        width: 100%;
+    }
+
+    .adoption-carousel__controls {
+        align-items: center;
+        display: grid;
+        gap: .75rem;
+        grid-template-columns: 48px 1fr 48px;
+        margin: 1rem 0 .75rem;
+    }
+
+    .adoption-carousel__control {
+        align-items: center;
+        background: #007bff;
+        border: 0;
+        border-radius: 50%;
+        color: #fff;
+        display: inline-flex;
+        height: 48px;
+        justify-content: center;
+        width: 48px;
+    }
+
+    .adoption-carousel__control:focus-visible,
+    .adoption-carousel__control:hover {
+        background: #0056b3;
+        outline: 3px solid #9ddcff;
+        outline-offset: 2px;
+    }
+
+    .adoption-carousel__status {
+        color: #343a40;
+        font-size: .95rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .GALERIA {
+        -ms-overflow-style: none;
+        gap: 1rem;
+        justify-content: flex-start;
+        margin: 0 -1.25rem;
+        overflow-x: auto;
+        padding: 0 1.25rem .75rem;
+        scroll-padding-inline: 1.25rem;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+    }
+
+    .GALERIA::-webkit-scrollbar {
+        display: none;
+    }
+
+    .INFO-PERRITOS {
+        flex: 0 0 calc(100% - .25rem);
+        scroll-snap-align: center;
+        scroll-snap-stop: always;
+        width: auto;
+    }
+
+    .INFO-PERRITOS:hover {
+        transform: none;
+    }
+
+    .INFO-PERRITOS img {
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        width: 100%;
+    }
+
+    .INFO-PERRITOS .adoption-link {
+        font-weight: 700;
+        min-height: 48px;
+        width: 100%;
+    }
 }
 
 
 
 
 
+
+/* Fichas compactas: priorizan la lectura rápida dentro del carrusel móvil. */
+.pet-summary {
+    margin: .35rem 0 .75rem !important;
+    color: #495057 !important;
+    font-size: .95rem !important;
+    line-height: 1.45;
+}
+
+.pet-traits {
+    display: grid;
+    gap: .45rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0 0 1rem;
+    width: 100%;
+}
+
+.pet-trait {
+    background: #f8f9fa;
+    border: 1px solid #d7e0e2;
+    border-radius: .5rem;
+    color: #3d4a50;
+    font-size: .78rem;
+    font-weight: 700;
+    line-height: 1.2;
+    padding: .5rem .35rem;
+    text-align: center;
+}
+
+@media (max-width: 767.98px) {
+    .INFO-PERRITOS {
+        gap: 0;
+        padding: 1rem;
+    }
+
+    .INFO-PERRITOS h4 {
+        margin: .25rem 0 .75rem;
+    }
+
+    .INFO-PERRITOS img {
+        margin-bottom: .75rem;
+    }
+
+    .pet-summary {
+        margin: .15rem 0 .65rem !important;
+    }
+
+    .pet-traits {
+        gap: .4rem;
+        margin-bottom: .85rem;
+    }
+}

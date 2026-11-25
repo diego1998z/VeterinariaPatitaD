@@ -41,7 +41,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/", "/login", "/logout", "/register",
                                 "/css/**", "/js/**", "/img/**", "/favicon.ico",
-                                "/sobre_nosotros", "/adoptar", "/envia_mensaje",
+                                "/sobre_nosotros", "/adoptar", "/adopciones/**", "/envia_mensaje",
                                 "/trabaja", "/upload", "/postular",
                                 "/simulador_citas", "/book_appointment",
                                 "/simulador_ventas",

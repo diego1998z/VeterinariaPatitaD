@@ -21,6 +21,9 @@
          <div th:replace="fragments/navbar :: navbar"></div>
     </header>
 <main class="flex-grow-1 d-flex flex-column align-items-center">
+    <div th:if="${adoptionError}" class="container mt-4">
+        <div class="alert alert-warning" role="alert" th:text="${adoptionError}"></div>
+    </div>
     <div class="card p-4 my-4 custom-main-card"> 
         <div class="container my-auto">
 <section class="section-container">
@@ -30,104 +33,115 @@ Adoptar a un perrito es un paso importante y queremos acompañarte en cada etapa
 Estamos aquí para ayudarte en este hermoso camino. ¡Gracias por querer darle una segunda oportunidad
 a un perrito!</p>
 <h2 class="titulo-principal" style="font-size:2em;">Disponible para Adopción:</h2>
-<div class="GALERIA">
+<div class="adoption-carousel" aria-label="Mascotas disponibles para adopción">
+    <div class="adoption-carousel__controls" aria-label="Controles del carrusel">
+        <button class="adoption-carousel__control" type="button" data-carousel-direction="previous" aria-label="Ver mascota anterior">
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+        </button>
+        <p class="adoption-carousel__status" aria-live="polite" aria-atomic="true">Mascota 1 de 8</p>
+        <button class="adoption-carousel__control" type="button" data-carousel-direction="next" aria-label="Ver mascota siguiente">
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        </button>
+    </div>
+<div class="GALERIA" id="adoption-pets-carousel" tabindex="0" aria-label="Deslizá para conocer las mascotas disponibles">
                                             <div class="INFO-PERRITOS">
                                                     <h4> ASESINO </h4>
-                                                    <img th:src="@{/img/asesino.jpg}" alt="PERRITO">
-                                                    <p>Hola! Me llamo Asesino y estoy listo para encontrar un hogar donde pueda correr, jugar y ser
-                                                            feliz como siempre lo soñe.</p>
-                                                    <p>Si buscas un compañero lleno de energia, alegria y amor, ¡aqui estoy esperandote!</p>
-                                                    <p>SEXO: MACHO</p>
-                                                    <P>TAMAÑO: PEQUEÑO</P>
-                                                    <P>NIVEL DE ACTIVIDAD: ALTO</P>
-                                                    <P>EDAD: 1 AÑO </P>
-                                                    <a th:href="@{/envia_mensaje}"><button> ADOPTAR</button></a>
+                                                    <img th:src="@{/img/asesino.jpg}" alt="Asesino, perro disponible para adopción">
+                                <p class="pet-summary">Activo y cariñoso; busca un hogar con juegos, paseos y mucho amor.</p>
+                                <div class="pet-traits" aria-label="Características de Asesino">
+                                    <span class="pet-trait">Macho</span>
+                                    <span class="pet-trait">Pequeño</span>
+                                    <span class="pet-trait">Actividad alta</span>
+                                    <span class="pet-trait">1 año</span>
+                                </div>
+                                <a class="adoption-link" th:href="@{/adopciones/asesino/solicitud}">Adoptar a Asesino</a>
                                                 </div>
                                             <div class="INFO-PERRITOS">
                                                     <h4> PIRATA </h4>
-                                                    <img th:src="@{/img/pirata.jpg}" alt="PERRITO">
-                                                    <p>Hola! Me llamo Pirata y estoy listo para encontrar un hogar donde pueda correr, jugar y ser
-                                                            feliz como siempre lo soñe.</p>
-                                                    <p>Si buscas un compañero lleno de energia, alegria y amor, ¡aqui estoy esperandote!</p>
-                                                    <p>SEXO: MACHO</p>
-                                                    <P>TAMAÑO: PEQUEÑO</P>
-                                                    <P>NIVEL DE ACTIVIDAD: ALTO</P>
-                                                    <P>EDAD: 1 AÑO </P>
-                                                    <a th:href="@{/envia_mensaje}"><button> ADOPTAR</button></a>
+                                                    <img th:src="@{/img/pirata.jpg}" alt="Pirata, perro disponible para adopción">
+                                <p class="pet-summary">Alegre y compañero; está listo para compartir nuevas aventuras con tu familia.</p>
+                                <div class="pet-traits" aria-label="Características de Pirata">
+                                    <span class="pet-trait">Macho</span>
+                                    <span class="pet-trait">Pequeño</span>
+                                    <span class="pet-trait">Actividad alta</span>
+                                    <span class="pet-trait">1 año</span>
+                                </div>
+                                <a class="adoption-link" th:href="@{/adopciones/pirata/solicitud}">Adoptar a Pirata</a>
                                                 </div>
                                             <div class="INFO-PERRITOS">
                                                     <h4> CUTO </h4>
-                                                    <img th:src="@{/img/cuto.jpg}" alt="PERRITO">
-                                                    <p>Hola! Me llamo Cuto y estoy listo para encontrar un hogar donde pueda correr, jugar y ser
-                                                            feliz como siempre lo soñe.</p>
-                                                    <p>Si buscas un compañero lleno de energia, alegria y amor, ¡aqui estoy esperandote!</p>
-                                                    <p>SEXO: MACHO</p>
-                                                    <P>TAMAÑO: PEQUEÑO</P>
-                                                    <P>NIVEL DE ACTIVIDAD: ALTO</P>
-                                                    <P>EDAD: 1 AÑO </P>
-                                                    <a th:href="@{/envia_mensaje}"><button> ADOPTAR</button></a>
+                                                    <img th:src="@{/img/cuto.jpg}" alt="Cuto, perro disponible para adopción">
+                                <p class="pet-summary">Sociable y juguetón; sueña con un hogar lleno de cariño y momentos divertidos.</p>
+                                <div class="pet-traits" aria-label="Características de Cuto">
+                                    <span class="pet-trait">Macho</span>
+                                    <span class="pet-trait">Pequeño</span>
+                                    <span class="pet-trait">Actividad alta</span>
+                                    <span class="pet-trait">1 año</span>
+                                </div>
+                                <a class="adoption-link" th:href="@{/adopciones/cuto/solicitud}">Adoptar a Cuto</a>
                                                 </div>
                                             <div class="INFO-PERRITOS">
                                                     <h4> BLUE </h4>
-                                                    <img th:src="@{/img/blue.avif}" alt="PERRITO">
-                                                    <p>¡Hola! Me llamo Blue y estoy buscando una familia con quien compartir mi nueva oportunidad de
-                                                            ser feliz </p>
-                                                    <p>Si buscas un compañero lleno de energia, alegria y amor, ¡aqui estoy esperandote!</p>
-                                                    <p>SEXO: MACHO</p>
-                                                    <P>TAMAÑO: PEQUEÑO</P>
-                                                    <P>NIVEL DE ACTIVIDAD: ALTO</P>
-                                                    <P>EDAD: 1 AÑO </P>
-                                                    <a th:href="@{/envia_mensaje}"><button> ADOPTAR </button></a>
+                                                    <img th:src="@{/img/blue.avif}" alt="Blue, perro disponible para adopción">
+                                <p class="pet-summary">Curioso y lleno de energía; busca una familia para vivir nuevos momentos juntos.</p>
+                                <div class="pet-traits" aria-label="Características de Blue">
+                                    <span class="pet-trait">Macho</span>
+                                    <span class="pet-trait">Pequeño</span>
+                                    <span class="pet-trait">Actividad alta</span>
+                                    <span class="pet-trait">1 año</span>
+                                </div>
+                                <a class="adoption-link" th:href="@{/adopciones/blue/solicitud}">Adoptar a Blue</a>
                                                 </div>
                                             <div class="INFO-PERRITOS">
                                                     <h4> BOMBON </h4>
-                                                    <img th:src="@{/img/bombon.avif}" alt="PERRITO">
-                                                    <p>¡Hola! Me llamo Bombón y estoy buscando una familia con la que pueda compartir todo mi amor,
-                                                            dulzura y alegría</p>
-                                                    <p>Si buscas un compañero lleno de energia, alegria y amor, ¡aqui estoy esperandote!</p>
-                                                    <p>SEXO: HEMBRA</p>
-                                                    <P>TAMAÑO: PEQUEÑO</P>
-                                                    <P>NIVEL DE ACTIVIDAD: MODERADO</P>
-                                                    <P>FECHA DE NACIMIENTO: MARZO 2025</P>
-                                                    <a th:href="@{/envia_mensaje}"><button>ADOPTAR</button></a>
+                                                    <img th:src="@{/img/bombon.avif}" alt="Bombón, perra disponible para adopción">
+                                <p class="pet-summary">Dulce y tranquila; está lista para dar amor y recibir cuidados todos los días.</p>
+                                <div class="pet-traits" aria-label="Características de Bombón">
+                                    <span class="pet-trait">Hembra</span>
+                                    <span class="pet-trait">Pequeña</span>
+                                    <span class="pet-trait">Actividad moderada</span>
+                                    <span class="pet-trait">Nació en marzo de 2025</span>
+                                </div>
+                                <a class="adoption-link" th:href="@{/adopciones/bombon/solicitud}">Adoptar a Bombón</a>
                                                 </div>
                                             <div class="INFO-PERRITOS">
                                                     <h4> PEPON </h4>
-                                                    <img th:src="@{/img/pepon.avif}" alt="PERRITO">
-                                                    <p>¡Hola! Me llamo Pepón y estoy buscando una familia que me dé una nueva oportunidad para ser
-                                                            feliz como siempre lo he soñado</p>
-                                                    <p>Si buscas un compañero lleno de energia, alegria y amor, ¡aqui estoy esperandote!</p>
-                                                    <p>SEXO: MACHO</p>
-                                                    <P>TAMAÑO: PEQUEÑO</P>
-                                                    <P>NIVEL DE ACTIVIDAD: ALTO</P>
-                                                    <P>EDAD: 2 AÑOS </P>
-                                                    <a th:href="@{/envia_mensaje}"><button> ADOPTAR </button></a>
+                                                    <img th:src="@{/img/pepon.avif}" alt="Pepón, perro disponible para adopción">
+                                <p class="pet-summary">Cariñoso y entusiasta; espera una segunda oportunidad para ser muy feliz.</p>
+                                <div class="pet-traits" aria-label="Características de Pepón">
+                                    <span class="pet-trait">Macho</span>
+                                    <span class="pet-trait">Pequeño</span>
+                                    <span class="pet-trait">Actividad alta</span>
+                                    <span class="pet-trait">2 años</span>
+                                </div>
+                                <a class="adoption-link" th:href="@{/adopciones/pepon/solicitud}">Adoptar a Pepón</a>
                                                 </div>
                                             <div class="INFO-PERRITOS">
                                                     <h4> OSITO </h4>
-                                                    <img th:src="@{/img/osito.avif}" alt="PERRITO">
-                                                    <p>¡Hola! Mi nombre es Osito, y soy super cariñoso. Estoy a la espera un hogar que me quiera
-                                                            mucho. Soy super tranquilo porque soy mayorcito, ¡Pero siempre con alma de cachorro!</p>
-                                                    <p>Si buscas un compañero lleno de energia, alegria y amor, ¡aqui estoy esperandote!</p>
-                                                    <p>SEXO: MACHO</p>
-                                                    <P>TAMAÑO: GRANDE</P>
-                                                    <P>NIVEL DE ACTIVIDAD: BAJO</P>
-                                                    <P>FECHA DE NACIMIENTO: ABRIL 2012 </P>
-                                                    <a th:href="@{/envia_mensaje}"><button> ADOPTAR</button></a>
+                                                    <img th:src="@{/img/osito.avif}" alt="Osito, perro disponible para adopción">
+                                <p class="pet-summary">Sereno y muy cariñoso; sería feliz en un hogar tranquilo y lleno de amor.</p>
+                                <div class="pet-traits" aria-label="Características de Osito">
+                                    <span class="pet-trait">Macho</span>
+                                    <span class="pet-trait">Grande</span>
+                                    <span class="pet-trait">Actividad baja</span>
+                                    <span class="pet-trait">Nació en abril de 2012</span>
+                                </div>
+                                <a class="adoption-link" th:href="@{/adopciones/osito/solicitud}">Adoptar a Osito</a>
                                                 </div>
                                             <div class="INFO-PERRITOS">
                                                     <h4> CELESTE </h4>
-                                                    <img th:src="@{/img/celeste.avif}" alt="PERRITO">
-                                                    <p>¡Hola! Me llamo Celeste y estoy buscando una familia donde pueda crecer rodeada de amor,
-                                                            cuidado y muchas aventuras bonitas </p>
-                                                    <p>Si buscas un compañero lleno de energia, alegria y amor, ¡aqui estoy esperandote!</p>
-                                                    <p>SEXO: HEMBRA</p>
-                                                    <P>TAMAÑO ESTIMADO : MEDIANO</P>
-                                                    <P>NIVEL DE ACTIVIDAD: MODERADO</P>
-                                                    <P>FECHA DE NACIMIENTO: ABRIL 2025 </P>
-                                                    <a th:href="@{/envia_mensaje}"><button> ADOPTAR</button></a>
+                                                    <img th:src="@{/img/celeste.avif}" alt="Celeste, perra disponible para adopción">
+                                <p class="pet-summary">Curiosa y tierna; espera crecer rodeada de amor, cuidado y aventuras bonitas.</p>
+                                <div class="pet-traits" aria-label="Características de Celeste">
+                                    <span class="pet-trait">Hembra</span>
+                                    <span class="pet-trait">Mediana estimada</span>
+                                    <span class="pet-trait">Actividad moderada</span>
+                                    <span class="pet-trait">Nació en abril de 2025</span>
+                                </div>
+                                <a class="adoption-link" th:href="@{/adopciones/celeste/solicitud}">Adoptar a Celeste</a>
                                                 </div>
                                         </div>
+                    </div>
                                 </section>
                         </div>
 </div>
@@ -137,6 +151,7 @@ a un perrito!</p>
         <p>&copy; 2025 Veterinaria PATITAS. Todos los derechos reservados.</p>
     </footer>
     <script th:src="@{/js/navbar_logic.js}"></script>
+    <script th:src="@{/js/adoption_carousel.js}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
 </html>
