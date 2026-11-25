@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" th:href="@{/css/adoptar.css}">
+    <link rel="stylesheet" th:href="@{/css/sobre_nosotros.css}">
     <link rel="stylesheet" th:href="@{/css/index.css}">
     <link rel="icon" th:href="@{/img/portadafondo.png}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -29,8 +30,13 @@
                 objetivo es brindar atención personalizada y compasiva a cada paciente, asegurando su bienestar en cada
                 etapa de su vida.
             </p>
-            <div class="row justify-content-center g-4">
-                <div class="col-12 col-sm-6 col-lg-4 d-flex justify-content-center">
+            <section class="team-carousel" aria-label="Equipo médico">
+                <div class="team-carousel__viewport">
+                    <button class="team-carousel__button team-carousel__button--previous" type="button" data-team-carousel-prev aria-label="Ver profesional anterior">
+                        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                    </button>
+                    <div class="row justify-content-center g-4 team-carousel__track" data-team-carousel-track>
+                <div class="col-12 col-sm-6 col-lg-4 d-flex justify-content-center team-carousel__slide">
                     <div class="card team-hover text-center shadow" style="width: 100%; max-width: 320px; background: linear-gradient(135deg, #e0f7fa 60%, #fff 100%); border-radius:18px;">
                         <img th:src="@{/img/aimed_gonzales.jpg}" class="team-img card-img-top rounded-circle mx-auto mt-3 border border-5 border-white shadow" alt="M.V.Z. Dipl. Aimed Gonzales" style="width:180px; height:180px; object-fit:cover;">
                         <div class="card-body">
@@ -40,7 +46,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-4 d-flex justify-content-center">
+                <div class="col-12 col-sm-6 col-lg-4 d-flex justify-content-center team-carousel__slide">
                     <div class="card team-hover text-center shadow" style="width: 100%; max-width: 320px; background: linear-gradient(135deg, #e0f7fa 60%, #fff 100%); border-radius:18px;">
                         <img th:src="@{/img/angel_shinno.jpg}" class="team-img card-img-top rounded-circle mx-auto mt-3 border border-5 border-white shadow" alt="M.V.Z. Angel Shinno" style="width:180px; height:180px; object-fit:cover;">
                         <div class="card-body">
@@ -50,7 +56,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-4 d-flex justify-content-center">
+                <div class="col-12 col-sm-6 col-lg-4 d-flex justify-content-center team-carousel__slide">
                     <div class="card team-hover text-center shadow" style="width: 100%; max-width: 320px; background: linear-gradient(135deg, #e0f7fa 60%, #fff 100%); border-radius:18px;">
                         <img th:src="@{/img/noryan_sifuentes.jpg}" class="team-img card-img-top rounded-circle mx-auto mt-3 border border-5 border-white shadow" alt="M.V. Noryan Sifuentes" style="width:180px; height:180px; object-fit:cover;">
                         <div class="card-body">
@@ -60,7 +66,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-4 d-flex justify-content-center">
+                <div class="col-12 col-sm-6 col-lg-4 d-flex justify-content-center team-carousel__slide">
                     <div class="card team-hover text-center shadow" style="width: 100%; max-width: 320px; background: linear-gradient(135deg, #e0f7fa 60%, #fff 100%); border-radius:18px;">
                         <img th:src="@{/img/angel_aguirre.jpg}" class="team-img card-img-top rounded-circle mx-auto mt-3 border border-5 border-white shadow" alt="M.V.Z. Dipl. Angel Aguirre" style="width:180px; height:180px; object-fit:cover;">
                         <div class="card-body">
@@ -70,7 +76,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-4 d-flex justify-content-center">
+                <div class="col-12 col-sm-6 col-lg-4 d-flex justify-content-center team-carousel__slide">
                     <div class="card team-hover text-center shadow" style="width: 100%; max-width: 320px; background: linear-gradient(135deg, #e0f7fa 60%, #fff 100%); border-radius:18px;">
                         <img th:src="@{/img/mario_flores.jpg}" class="team-img card-img-top rounded-circle mx-auto mt-3 border border-5 border-white shadow" alt="M.V. Mario Flores" style="width:180px; height:180px; object-fit:cover;">
                         <div class="card-body">
@@ -80,7 +86,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-lg-4 d-flex justify-content-center">
+                <div class="col-12 col-sm-6 col-lg-4 d-flex justify-content-center team-carousel__slide">
                     <div class="card team-hover text-center shadow" style="width: 100%; max-width: 320px; background: linear-gradient(135deg, #e0f7fa 60%, #fff 100%); border-radius:18px;">
                         <img th:src="@{/img/rolando_campos.jpg}" class="team-img card-img-top rounded-circle mx-auto mt-3 border border-5 border-white shadow" alt="M.V.Z. Dipl. Rolando Campos" style="width:180px; height:180px; object-fit:cover;">
                         <div class="card-body">
@@ -90,7 +96,13 @@
                         </div>
                     </div>
                 </div>
-            </div>
+                    </div>
+                    <button class="team-carousel__button team-carousel__button--next" type="button" data-team-carousel-next aria-label="Ver siguiente profesional">
+                        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <p class="team-carousel__status mb-0" data-team-carousel-status aria-live="polite">Profesional 1 de 6</p>
+            </section>
         </section>
     </div>
    </div>
@@ -154,5 +166,6 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/navbar_logic.js}"></script>
+<script th:src="@{/js/team_carousel.js}"></script>
 </body>
 </html>

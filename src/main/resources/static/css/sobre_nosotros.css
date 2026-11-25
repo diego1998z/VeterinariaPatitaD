@@ -2,9 +2,9 @@
     max-width: 1200px;
     margin: 40px auto;
     padding: 30px;
-    background-color: #fff;   /* fondo blanco */
-    border-radius: 12px;      /* bordes redondeados */
-    box-shadow: 0 0 30px rgba(0,0,0,0.1); /* sombra suave */
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.1);
 }
 .sobre-nosotros {
     display: flex;
@@ -20,8 +20,8 @@
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
     text-align: center;
     background-color: white;
-    border-radius: 1rem; /* rounded-4 de Bootstrap */
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    border-radius: 1rem;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
 }
 .card.team-hover {
     transition: transform 0.5s cubic-bezier(0.4, 2, 0.6, 1), box-shadow 0.5s;
@@ -48,4 +48,125 @@
     background-color: #fff;
     border-radius: 16px;
     box-shadow: 0 0 24px rgba(0, 128, 128, 0.10);
+}
+
+.team-carousel__button,
+.team-carousel__status {
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    .container-custom {
+        margin: 1rem auto 2rem;
+        padding: 1rem;
+    }
+
+    /* Bootstrap's p-4 plus the nested containers made the available card area
+       much too narrow on phones. Keep the reading column wide instead. */
+    .container-custom > .custom-main-card {
+        padding: 1rem !important;
+    }
+
+    .sobre-nosotros-container {
+        padding: 0;
+        box-shadow: none;
+    }
+
+    .sobre-nosotros {
+        padding: 1.25rem 0;
+    }
+
+    .sobre-nosotros-box {
+        padding: 1.25rem 1rem;
+        max-width: 100%;
+    }
+
+    .team-carousel {
+        margin-inline: -1rem;
+    }
+
+    .team-carousel__viewport {
+        position: relative;
+        display: block;
+        min-height: 48px;
+    }
+
+    .team-carousel__button {
+        display: grid;
+        position: absolute;
+        top: 50%;
+        z-index: 2;
+        width: 48px;
+        height: 48px;
+        place-items: center;
+        color: #006f6f;
+        background: #e0f7fa;
+        border: 1px solid #9ad9de;
+        border-radius: 50%;
+        font-size: 1rem;
+        transform: translateY(-50%);
+    }
+
+    .team-carousel__button--previous {
+        left: -.5rem;
+    }
+
+    .team-carousel__button--next {
+        right: -.5rem;
+    }
+
+    .team-carousel__button:focus-visible {
+        outline: 3px solid #f2aa4c;
+        outline-offset: 3px;
+    }
+
+    .team-carousel__status {
+        display: block;
+        min-width: 130px;
+        margin: .75rem auto 0 !important;
+        color: #17424d;
+        font-family: Montserrat, sans-serif;
+        font-size: .9rem;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .team-carousel__track {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        margin: 0;
+        overflow: hidden;
+    }
+
+    .team-carousel__slide {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Bootstrap .d-flex uses !important, so hidden slides require the same priority. */
+    .team-carousel__slide[hidden] {
+        display: none !important;
+    }
+
+    .team-carousel__slide.is-active {
+        display: flex !important;
+        justify-content: center;
+    }
+
+    .team-carousel__slide .team-hover {
+        width: 100% !important;
+        max-width: 360px !important;
+        margin: 0;
+    }
+
+    .team-carousel__slide .card-body {
+        padding: 1rem;
+    }
+
+    .team-carousel__slide .card-text {
+        margin-bottom: .75rem;
+    }
 }
