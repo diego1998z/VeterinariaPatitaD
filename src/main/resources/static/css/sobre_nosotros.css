@@ -56,7 +56,15 @@
 }
 
 @media (max-width: 767.98px) {
+    body {
+        overflow-x: clip;
+        max-width: 100%;
+    }
+
     .container-custom {
+        box-sizing: border-box;
+        width: calc(100vw - 1rem);
+        max-width: calc(100vw - 1rem);
         margin: 1rem auto 2rem;
         padding: 1rem;
     }
@@ -64,31 +72,45 @@
     /* Bootstrap's p-4 plus the nested containers made the available card area
        much too narrow on phones. Keep the reading column wide instead. */
     .container-custom > .custom-main-card {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
         padding: 1rem !important;
     }
 
     .sobre-nosotros-container {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
         padding: 0;
         box-shadow: none;
     }
 
     .sobre-nosotros {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
         padding: 1.25rem 0;
     }
 
     .sobre-nosotros-box {
+        box-sizing: border-box;
+        width: 100%;
         padding: 1.25rem 1rem;
         max-width: 100%;
     }
 
     .team-carousel {
-        margin-inline: -1rem;
+        width: 100%;
+        margin-inline: 0;
+        padding-inline: 2.75rem;
     }
 
     .team-carousel__viewport {
         position: relative;
         display: block;
         min-height: 48px;
+        width: 100%;
     }
 
     .team-carousel__button {
@@ -108,11 +130,11 @@
     }
 
     .team-carousel__button--previous {
-        left: -.5rem;
+        left: -2.5rem;
     }
 
     .team-carousel__button--next {
-        right: -.5rem;
+        right: -2.5rem;
     }
 
     .team-carousel__button:focus-visible {

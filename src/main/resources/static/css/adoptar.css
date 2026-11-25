@@ -111,17 +111,33 @@ h3 {
 }
 
 @media (max-width: 767.98px) {
+    body {
+        overflow-x: clip;
+        max-width: 100%;
+    }
+
+    main {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: clip;
+    }
+
     .custom-main-card {
-        width: min(100% - 1.5rem, 30rem);
+        box-sizing: border-box;
+        width: min(calc(100vw - 1.5rem), 30rem);
+        max-width: calc(100vw - 1.5rem);
         padding: 1.25rem !important;
     }
 
     .section-container {
+        width: 100%;
+        max-width: 100%;
         min-width: 0;
     }
 
     .adoption-carousel {
         width: 100%;
+        max-width: 100%;
     }
 
     .adoption-carousel__controls {
@@ -130,6 +146,7 @@ h3 {
         gap: .75rem;
         grid-template-columns: 48px 1fr 48px;
         margin: 1rem 0 .75rem;
+        width: 100%;
     }
 
     .adoption-carousel__control {
@@ -162,10 +179,11 @@ h3 {
         -ms-overflow-style: none;
         gap: 1rem;
         justify-content: flex-start;
-        margin: 0 -1.25rem;
+        margin: 0;
+        width: 100%;
         overflow-x: auto;
-        padding: 0 1.25rem .75rem;
-        scroll-padding-inline: 1.25rem;
+        padding: 0 .125rem .75rem;
+        scroll-padding-inline: .125rem;
         scroll-snap-type: x mandatory;
         scrollbar-width: none;
         flex-wrap: nowrap;
@@ -176,7 +194,7 @@ h3 {
     }
 
     .INFO-PERRITOS {
-        flex: 0 0 calc(100% - .25rem);
+        flex: 0 0 100%;
         scroll-snap-align: center;
         scroll-snap-stop: always;
         width: auto;

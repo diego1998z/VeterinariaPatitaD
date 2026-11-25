@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# El filesystem de Railway es efimero; los adjuntos deben migrarse a object storage
+# antes de pretender persistirlos entre despliegues.
+uploads/
