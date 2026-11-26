@@ -101,9 +101,12 @@
     }
 
     .team-carousel {
+        position: relative;
         width: 100%;
         margin-inline: 0;
-        padding-inline: 2.75rem;
+        /* The arrows are absolutely positioned, so they must not take width
+           away from the professional card on narrow screens. */
+        padding-inline: 0;
     }
 
     .team-carousel__viewport {
@@ -116,25 +119,28 @@
     .team-carousel__button {
         display: grid;
         position: absolute;
-        top: 50%;
+        inset-block-start: 50%;
         z-index: 2;
         width: 48px;
         height: 48px;
+        margin: 0;
+        padding: 0;
         place-items: center;
         color: #006f6f;
         background: #e0f7fa;
         border: 1px solid #9ad9de;
         border-radius: 50%;
         font-size: 1rem;
+        line-height: 1;
         transform: translateY(-50%);
     }
 
     .team-carousel__button--previous {
-        left: -2.5rem;
+        inset-inline-start: -2.5rem;
     }
 
     .team-carousel__button--next {
-        right: -2.5rem;
+        inset-inline-end: -2.5rem;
     }
 
     .team-carousel__button:focus-visible {
@@ -180,7 +186,9 @@
 
     .team-carousel__slide .team-hover {
         width: 100% !important;
-        max-width: 360px !important;
+        /* The card must be wider than the 180px portrait and use the full
+           reading column available on a phone. */
+        max-width: 320px !important;
         margin: 0;
     }
 
